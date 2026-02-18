@@ -43,6 +43,7 @@ STATE_TANF_VARIABLES = {
     "MN": "mn_mfip",    # MFIP = Minnesota Family Investment Program (2025+ only)
     "MO": "mo_tanf",
     "MS": "ms_tanf",
+    "MT": "mt_tanf",
     "NC": "nc_tanf",
     "ND": "nd_tanf",
     "NE": "ne_adc",     # ADC = Aid to Dependent Children

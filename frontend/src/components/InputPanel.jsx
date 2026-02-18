@@ -11,7 +11,7 @@ const INITIAL_FORM_DATA = {
   resources: 0,
 }
 
-function InputPanel({ selectedState, counties, countyRequired, onCalculate, onInputChange, onReset, loading }) {
+function InputPanel({ selectedState, states, counties, countyRequired, onCalculate, onInputChange, onReset, onStateSelect, loading }) {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA)
 
   // Reset county when state changes
@@ -66,6 +66,20 @@ function InputPanel({ selectedState, counties, countyRequired, onCalculate, onIn
       <h2>Household Information</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-grid">
+          <div className="form-group">
+            <label htmlFor="state">State</label>
+            <select
+              id="state"
+              name="state"
+              value={selectedState}
+              onChange={(e) => onStateSelect(e.target.value)}
+            >
+              {states.map(s => (
+                <option key={s.code} value={s.code}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
           {countyRequired && counties.length > 0 && (
             <div className="form-group">
               <label htmlFor="county">County</label>

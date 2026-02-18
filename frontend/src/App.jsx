@@ -174,15 +174,33 @@ function App() {
         <p>Estimate your Temporary Assistance for Needy Families (TANF) benefits</p>
       </header>
 
-      <InputPanel
-        selectedState={selectedState}
-        counties={counties}
-        countyRequired={countyRequired}
-        onCalculate={handleCalculate}
-        onInputChange={handleInputChange}
-        onReset={handleReset}
-        loading={loading}
-      />
+      <div className="top-layout">
+        <InputPanel
+          selectedState={selectedState}
+          states={states}
+          counties={counties}
+          countyRequired={countyRequired}
+          onCalculate={handleCalculate}
+          onInputChange={handleInputChange}
+          onReset={handleReset}
+          onStateSelect={handleStateSelect}
+          loading={loading}
+        />
+
+        <section className="map-section">
+          <h2>{comparisonData ? 'Benefit Comparison by State' : 'Select Your State'}</h2>
+          {comparisonLoading && (
+            <div className="loading">Loading state comparison...</div>
+          )}
+          <StateMap
+            selectedState={selectedState}
+            availableStates={states}
+            onStateSelect={handleStateSelect}
+            comparisonData={comparisonData}
+            maxBenefit={maxBenefit}
+          />
+        </section>
+      </div>
 
       {(result || loading || error) && (
         <ResultsPanel
@@ -215,20 +233,6 @@ function App() {
           onClose={() => setShowComparison(false)}
         />
       )}
-
-      <section className="map-section">
-        <h2>{comparisonData ? 'Benefit Comparison by State' : 'Select Your State'}</h2>
-        {comparisonLoading && (
-          <div className="loading">Loading state comparison...</div>
-        )}
-        <StateMap
-          selectedState={selectedState}
-          availableStates={states}
-          onStateSelect={handleStateSelect}
-          comparisonData={comparisonData}
-          maxBenefit={maxBenefit}
-        />
-      </section>
 
       {comparisonData && (
         <section className="comparison-section">
