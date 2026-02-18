@@ -63,4 +63,4 @@ The dev server starts at `http://localhost:3000` and proxies API requests to the
 
 ## License
 
-This project is licensed under the GNU Affero General Public License v3.0. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
