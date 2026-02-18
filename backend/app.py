@@ -110,6 +110,15 @@ class ScenarioComparisonInput(BaseModel):
 
 @app.get("/")
 def root():
+    static_index = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    if os.path.isfile(static_index):
+        from starlette.responses import FileResponse
+        return FileResponse(static_index)
+    return {"message": "TANF Calculator API", "version": "0.1.0"}
+
+
+@app.get("/health")
+def health():
     return {"message": "TANF Calculator API", "version": "0.1.0"}
 
 
@@ -373,6 +382,24 @@ def calculate_comparison(input: ScenarioComparisonInput):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Serve frontend static files in production
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(static_dir):
+    from fastapi.staticfiles import StaticFiles
+    from starlette.responses import FileResponse
+
+    assets_dir = os.path.join(static_dir, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="static-assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        file_path = os.path.join(static_dir, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(static_dir, "index.html"))
 
 
 if __name__ == "__main__":
