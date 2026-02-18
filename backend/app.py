@@ -27,6 +27,7 @@ app = FastAPI(
 
 # CORS: allow configured frontend URL + local dev origins
 cors_origins = [
+    "https://policyengine.github.io",
     "http://localhost:3000",
     "http://localhost:3001",
     "http://localhost:3002",

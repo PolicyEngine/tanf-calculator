@@ -5,7 +5,7 @@ import ResultsPanel from './components/ResultsPanel'
 import StateRanking from './components/StateRanking'
 import ScenarioComparison from './components/ScenarioComparison'
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api'
+const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.PROD ? 'https://tanf-calculator.fly.dev' : '/api')
 
 function App() {
   const [states, setStates] = useState([])
