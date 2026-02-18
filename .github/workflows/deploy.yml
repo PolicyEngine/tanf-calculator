@@ -1,0 +1,33 @@
+name: Deploy to Fly.io
+
+on:
+  schedule:
+    # Every 2 weeks on Monday at midnight UTC
+    - cron: '0 0 */14 * *'
+  workflow_dispatch:
+    inputs:
+      bust_cache:
+        description: 'Bust pip cache to get latest packages'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Fly.io CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: |
+          if [ "${{ inputs.bust_cache }}" = "true" ]; then
+            flyctl deploy --remote-only --build-arg CACHEBUST=$(date +%s)
+          else
+            flyctl deploy --remote-only
+          fi
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
