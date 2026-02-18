@@ -170,8 +170,13 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>TANF Calculator</h1>
-        <p>Estimate your Temporary Assistance for Needy Families (TANF) benefits</p>
+        <div className="header-brand">
+          <img src={`${import.meta.env.BASE_URL}policyengine-logo.png`} alt="PolicyEngine" className="header-logo" />
+          <div>
+            <h1>TANF Calculator</h1>
+            <p>Estimate your TANF benefits</p>
+          </div>
+        </div>
       </header>
 
       <div className="top-layout">
