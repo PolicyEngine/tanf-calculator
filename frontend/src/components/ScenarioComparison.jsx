@@ -3,7 +3,12 @@ import { useState } from 'react'
 const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 
 function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequired, onClose }) {
-  const [scenarioB, setScenarioB] = useState({ ...defaultInputs })
+  // Store income as monthly for user-friendly input (defaultInputs has annual values)
+  const [scenarioB, setScenarioB] = useState({
+    ...defaultInputs,
+    earned_income: Math.round(defaultInputs.earned_income / 12),
+    unearned_income: Math.round(defaultInputs.unearned_income / 12),
+  })
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -33,7 +38,11 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           scenario_a: defaultInputs,
-          scenario_b: scenarioB,
+          scenario_b: {
+            ...scenarioB,
+            earned_income: scenarioB.earned_income * 12,
+            unearned_income: scenarioB.unearned_income * 12,
+          },
         }),
       })
       if (!res.ok) {
@@ -50,6 +59,9 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
   }
 
   const isDifferent = (field) => {
+    if (field === 'earned_income' || field === 'unearned_income') {
+      return Math.round(defaultInputs[field] / 12) !== scenarioB[field]
+    }
     return defaultInputs[field] !== scenarioB[field]
   }
 
@@ -66,8 +78,8 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
           <div className="scenario-summary">
             <p><strong>Adults:</strong> {defaultInputs.num_adults}</p>
             <p><strong>Children:</strong> {defaultInputs.num_children}</p>
-            <p><strong>Earned Income:</strong> {formatCurrency(defaultInputs.earned_income)}/yr</p>
-            <p><strong>Unearned Income:</strong> {formatCurrency(defaultInputs.unearned_income)}/yr</p>
+            <p><strong>Earned Income:</strong> {formatCurrency(defaultInputs.earned_income / 12)}/mo</p>
+            <p><strong>Unearned Income:</strong> {formatCurrency(defaultInputs.unearned_income / 12)}/mo</p>
             <p><strong>Resources:</strong> {formatCurrency(defaultInputs.resources)}</p>
           </div>
         </div>
@@ -90,14 +102,14 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
                 className={isDifferent('num_children') ? 'changed' : ''} />
             </div>
             <div className="scenario-field">
-              <label>Earned Income ($/yr)</label>
-              <input type="number" name="earned_income" min="0" step="1000"
+              <label>Earned Income ($/mo)</label>
+              <input type="number" name="earned_income" min="0" step="100"
                 value={scenarioB.earned_income} onChange={handleChange}
                 className={isDifferent('earned_income') ? 'changed' : ''} />
             </div>
             <div className="scenario-field">
-              <label>Unearned Income ($/yr)</label>
-              <input type="number" name="unearned_income" min="0" step="1000"
+              <label>Unearned Income ($/mo)</label>
+              <input type="number" name="unearned_income" min="0" step="100"
                 value={scenarioB.unearned_income} onChange={handleChange}
                 className={isDifferent('unearned_income') ? 'changed' : ''} />
             </div>
