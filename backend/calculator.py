@@ -249,19 +249,19 @@ def calculate_tanf(
     max_amount = _safe_calculate(simulation, "tanf_max_amount", year)
     if max_amount is not None:
         breakdown["max_benefit_annual"] = max_amount
-        breakdown["max_benefit_monthly"] = max_amount / 12
+        breakdown["max_benefit_monthly"] = round(max_amount / 12)
     countable_income = _safe_calculate(simulation, "tanf_countable_income", year)
     if countable_income is not None:
         breakdown["countable_income_annual"] = countable_income
-        breakdown["countable_income_monthly"] = countable_income / 12
+        breakdown["countable_income_monthly"] = round(countable_income / 12)
     gross_earned = _safe_calculate(simulation, "tanf_gross_earned_income", year)
     if gross_earned is not None:
         breakdown["gross_earned_income_annual"] = gross_earned
-        breakdown["gross_earned_income_monthly"] = gross_earned / 12
+        breakdown["gross_earned_income_monthly"] = round(gross_earned / 12)
     gross_unearned = _safe_calculate(simulation, "tanf_gross_unearned_income", year)
     if gross_unearned is not None:
         breakdown["gross_unearned_income_annual"] = gross_unearned
-        breakdown["gross_unearned_income_monthly"] = gross_unearned / 12
+        breakdown["gross_unearned_income_monthly"] = round(gross_unearned / 12)
 
     # --- Feature 1: Eligibility Explanation ---
     eligibility_checks = {}
@@ -324,8 +324,8 @@ def calculate_tanf(
 
     # Get additional context if available
     result = {
-        "tanf_monthly": tanf_amount / 12,
-        "tanf_annual": tanf_amount,
+        "tanf_monthly": round(tanf_amount / 12),
+        "tanf_annual": round(tanf_amount),
         "eligible": tanf_eligible,
         "state": state,
         "state_name": PILOT_STATES.get(state, state),
@@ -437,7 +437,7 @@ def calculate_tanf_over_income_range(
         )
         results.append({
             "total_income_monthly": round(total_income / 12),
-            "tanf_monthly": tanf_amount / 12,
+            "tanf_monthly": round(tanf_amount / 12),
             "eligible": eligible,
         })
         total_income += income_step

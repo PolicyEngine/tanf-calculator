@@ -254,7 +254,7 @@ def calculate_all_states(input: AllStatesInput):
             results.append({
                 "state": state_code,
                 "state_name": state_name,
-                "tanf_monthly": tanf_amount / 12,
+                "tanf_monthly": round(tanf_amount / 12),
                 "tanf_annual": tanf_amount,
                 "eligible": eligible,
             })
