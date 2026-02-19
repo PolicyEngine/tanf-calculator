@@ -354,6 +354,39 @@ def calculate_tanf(
     return result
 
 
+def _calculate_tanf_amount(
+    state: str,
+    year: int,
+    num_adults: int,
+    num_children: int,
+    earned_income: float,
+    unearned_income: float = 0,
+    child_ages: list[int] | None = None,
+    county: str | None = None,
+    is_tanf_enrolled: bool = False,
+    resources: float = 0,
+) -> tuple[float, bool]:
+    """
+    Lightweight TANF calculation — returns only (annual_amount, eligible).
+    Skips breakdown, eligibility checks, diagnostics, and poverty context.
+    Used by range/chart endpoints where only the benefit amount is needed.
+    """
+    situation = create_situation(
+        state=state, year=year,
+        num_adults=num_adults, num_children=num_children,
+        earned_income=earned_income, unearned_income=unearned_income,
+        child_ages=child_ages, county=county,
+        is_tanf_enrolled=is_tanf_enrolled, resources=resources,
+    )
+    simulation = Simulation(situation=situation)
+    tanf_variable = STATE_TANF_VARIABLES.get(state, "tanf")
+    try:
+        tanf_amount = _to_float(simulation.calculate(tanf_variable, year))
+    except Exception:
+        tanf_amount = _to_float(simulation.calculate("tanf", year))
+    return tanf_amount, tanf_amount > 0
+
+
 def calculate_tanf_over_income_range(
     state: str,
     year: int,
@@ -390,7 +423,7 @@ def calculate_tanf_over_income_range(
         sweep_earned = total_income * earned_ratio
         sweep_unearned = total_income * (1 - earned_ratio)
 
-        calc = calculate_tanf(
+        tanf_amount, eligible = _calculate_tanf_amount(
             state=state,
             year=year,
             num_adults=num_adults,
@@ -404,8 +437,8 @@ def calculate_tanf_over_income_range(
         )
         results.append({
             "total_income_monthly": round(total_income / 12),
-            "tanf_monthly": calc["tanf_monthly"],
-            "eligible": calc["eligible"],
+            "tanf_monthly": tanf_amount / 12,
+            "eligible": eligible,
         })
         total_income += income_step
 
