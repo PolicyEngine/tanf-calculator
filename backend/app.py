@@ -9,6 +9,7 @@ from typing import Optional
 
 from calculator import (
     calculate_tanf,
+    _calculate_tanf_amount,
     calculate_tanf_over_income_range,
     calculate_combined_benefits_over_income_range,
 )
@@ -239,7 +240,7 @@ def calculate_all_states(input: AllStatesInput):
 
     for state_code, state_name in PILOT_STATES.items():
         try:
-            result = calculate_tanf(
+            tanf_amount, eligible = _calculate_tanf_amount(
                 state=state_code,
                 year=input.year,
                 num_adults=input.num_adults,
@@ -253,9 +254,9 @@ def calculate_all_states(input: AllStatesInput):
             results.append({
                 "state": state_code,
                 "state_name": state_name,
-                "tanf_monthly": result["tanf_monthly"],
-                "tanf_annual": result["tanf_annual"],
-                "eligible": result["eligible"],
+                "tanf_monthly": tanf_amount / 12,
+                "tanf_annual": tanf_amount,
+                "eligible": eligible,
             })
         except Exception:
             # Skip states that error (e.g., parameter issues for certain years)
