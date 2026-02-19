@@ -5,10 +5,18 @@ from policyengine_us import Simulation
 from config import PILOT_STATES, DEFAULT_YEAR
 
 
+def _to_float(value):
+    """Convert a NumPy array or scalar from PolicyEngine to a Python float."""
+    import numpy as np
+    if isinstance(value, np.ndarray):
+        return float(value.flat[0])
+    return float(value)
+
+
 def _safe_calculate(simulation, variable, year):
     """Safely calculate a PolicyEngine variable, returning None on failure."""
     try:
-        value = float(simulation.calculate(variable, year))
+        value = _to_float(simulation.calculate(variable, year))
         return value
     except Exception:
         return None
@@ -228,10 +236,10 @@ def calculate_tanf(
 
     # Calculate TANF benefit
     try:
-        tanf_amount = float(simulation.calculate(tanf_variable, year))
+        tanf_amount = _to_float(simulation.calculate(tanf_variable, year))
     except Exception:
         # Fall back to generic tanf if state-specific fails
-        tanf_amount = float(simulation.calculate("tanf", year))
+        tanf_amount = _to_float(simulation.calculate("tanf", year))
 
     # Eligibility is determined by whether benefit is > 0
     tanf_eligible = tanf_amount > 0
@@ -279,7 +287,7 @@ def calculate_tanf(
                 is_tanf_enrolled=is_tanf_enrolled, resources=resources,
             )
             zero_income_sim = Simulation(situation=zero_income_situation)
-            zero_income_tanf = float(zero_income_sim.calculate(tanf_variable, year))
+            zero_income_tanf = _to_float(zero_income_sim.calculate(tanf_variable, year))
             eligibility_checks["eligible_with_zero_income"] = zero_income_tanf > 0
         except Exception:
             pass
@@ -294,7 +302,7 @@ def calculate_tanf(
                 is_tanf_enrolled=is_tanf_enrolled, resources=0,
             )
             zero_resources_sim = Simulation(situation=zero_resources_situation)
-            zero_resources_tanf = float(zero_resources_sim.calculate(tanf_variable, year))
+            zero_resources_tanf = _to_float(zero_resources_sim.calculate(tanf_variable, year))
             eligibility_checks["eligible_with_zero_resources"] = zero_resources_tanf > 0
         except Exception:
             pass
