@@ -1,6 +1,12 @@
 name: Deploy to Fly.io
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'Dockerfile'
+      - 'fly.toml'
   schedule:
     # Every 2 weeks on Monday at midnight UTC
     - cron: '0 0 */14 * *'
