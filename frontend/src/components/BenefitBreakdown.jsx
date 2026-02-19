@@ -14,6 +14,10 @@ function BenefitBreakdown({ breakdown, tanfMonthly }) {
   const earnedMonthly = breakdown.gross_earned_income_monthly
   const unearnedMonthly = breakdown.gross_unearned_income_monthly
 
+  // Hide if there's no detail beyond the total
+  const hasDetail = maxMonthly != null || (countableMonthly != null && countableMonthly > 0)
+  if (!hasDetail) return null
+
   return (
     <details className="benefit-breakdown">
       <summary>How is this calculated?</summary>
