@@ -94,7 +94,7 @@ function App() {
             ...inputs,
             income_min: 0,
             income_max: 50000,
-            income_step: 500,
+            income_step: 600,
           }),
         }),
         fetch(`${API_BASE}/calculate-combined-range`, {
@@ -104,7 +104,7 @@ function App() {
             ...inputs,
             income_min: 0,
             income_max: 50000,
-            income_step: 2000,
+            income_step: 1200,
           }),
         }),
       ])

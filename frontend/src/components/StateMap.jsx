@@ -153,7 +153,6 @@ function StateMap({ selectedState, availableStates, onStateSelect, comparisonDat
     return (
       <>
         <strong>{stateName}</strong>
-        {!isAvailable && <span className="unavailable-text"> (Coming soon)</span>}
       </>
     )
   }
@@ -187,7 +186,7 @@ function StateMap({ selectedState, availableStates, onStateSelect, comparisonDat
                     strokeWidth={isSelected ? 2.5 : 0.5}
                     style={{
                       default: { outline: 'none' },
-                      hover: { outline: 'none', cursor: isAvailable ? 'pointer' : 'not-allowed' },
+                      hover: { outline: 'none', cursor: 'pointer' },
                       pressed: { outline: 'none' },
                     }}
                     onMouseEnter={() => setHoveredState(stateCode)}
@@ -226,10 +225,6 @@ function StateMap({ selectedState, availableStates, onStateSelect, comparisonDat
           <div className="legend-item">
             <span className="legend-color available"></span>
             <span>Available</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color unavailable"></span>
-            <span>Coming Soon</span>
           </div>
         </div>
       )}
