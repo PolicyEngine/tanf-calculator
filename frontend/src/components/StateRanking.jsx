@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import {
   BarChart,
   Bar,
@@ -7,23 +7,19 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
-  ReferenceLine,
 } from 'recharts'
 
+const DEFAULT_COUNT = 7
+
 function StateRanking({ data, selectedState, onStateSelect, maxBenefit }) {
-  // Get top 15 states (or all if less)
-  const topStates = useMemo(() => {
+  const [expanded, setExpanded] = useState(false)
+
+  const allEligible = useMemo(() => {
     if (!data) return []
-    return data
-      .filter(d => !d.error && d.tanf_monthly > 0)
-      .slice(0, 15)
+    return data.filter(d => !d.error && d.tanf_monthly > 0)
   }, [data])
 
-  // States that failed to calculate
-  const failedStates = useMemo(() => {
-    if (!data) return []
-    return data.filter(d => d.error)
-  }, [data])
+  const displayStates = expanded ? allEligible : allEligible.slice(0, DEFAULT_COUNT)
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -34,14 +30,12 @@ function StateRanking({ data, selectedState, onStateSelect, maxBenefit }) {
     }).format(value)
   }
 
-  // Find selected state's rank (among non-error states)
   const selectedStateData = useMemo(() => {
     if (!data || !selectedState) return null
-    const validStates = data.filter(d => !d.error)
-    const index = validStates.findIndex(d => d.state === selectedState)
-    if (index === -1) return null
-    return { ...validStates[index], rank: index + 1 }
-  }, [data, selectedState])
+    const idx = allEligible.findIndex(d => d.state === selectedState)
+    if (idx === -1) return null
+    return { ...allEligible[idx], rank: idx + 1 }
+  }, [data, selectedState, allEligible])
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -53,10 +47,10 @@ function StateRanking({ data, selectedState, onStateSelect, maxBenefit }) {
           borderRadius: '8px',
           boxShadow: '0 8px 24px rgba(26, 39, 68, 0.25)',
           color: 'white',
-          fontFamily: "'Source Sans 3', sans-serif",
+          fontFamily: "'Inter', sans-serif",
         }}>
           <p style={{ fontWeight: 600, marginBottom: '4px' }}>{item.state_name}</p>
-          <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#e85d4c', fontFamily: "'Libre Baskerville', serif" }}>
+          <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#4FD1C5' }}>
             {formatCurrency(item.tanf_monthly)}/mo
           </p>
           <p style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '4px' }}>
@@ -68,24 +62,17 @@ function StateRanking({ data, selectedState, onStateSelect, maxBenefit }) {
     return null
   }
 
-  if (!data || data.length === 0) {
-    return null
+  if (!data || allEligible.length === 0) {
+    return <p className="ranking-empty">No eligible states found for this household.</p>
   }
 
   return (
     <div className="state-ranking">
-      <div className="ranking-header">
-        <h3>State Benefit Comparison</h3>
-        <p className="ranking-subtitle">
-          Top states by monthly TANF benefit for your household
-        </p>
-      </div>
-
       {selectedStateData && (
         <div className="selected-state-rank">
           <span className="rank-badge">#{selectedStateData.rank}</span>
           <span className="rank-text">
-            <strong>{selectedStateData.state_name}</strong> ranks #{selectedStateData.rank} of {data.filter(d => !d.error && d.tanf_monthly > 0).length} states
+            <strong>{selectedStateData.state_name}</strong> ranks #{selectedStateData.rank} of {allEligible.length} states
             {selectedStateData.tanf_monthly > 0 && (
               <> with <strong>{formatCurrency(selectedStateData.tanf_monthly)}/mo</strong></>
             )}
@@ -94,39 +81,39 @@ function StateRanking({ data, selectedState, onStateSelect, maxBenefit }) {
       )}
 
       <div className="ranking-chart">
-        <ResponsiveContainer width="100%" height={Math.max(400, topStates.length * 36)}>
+        <ResponsiveContainer width="100%" height={Math.max(200, displayStates.length * 36)}>
           <BarChart
-            data={topStates}
+            data={displayStates}
             layout="vertical"
-            margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
-            barCategoryGap={8}
+            margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+            barCategoryGap={6}
           >
             <XAxis
               type="number"
               tickFormatter={(v) => `$${v}`}
-              tick={{ fill: '#6b7280', fontSize: 12 }}
+              tick={{ fill: '#6b7280', fontSize: 11 }}
               axisLine={{ stroke: '#e5e2dd' }}
               tickLine={{ stroke: '#e5e2dd' }}
             />
             <YAxis
               type="category"
               dataKey="state_name"
-              tick={{ fill: '#1a2744', fontSize: 13, fontWeight: 500 }}
+              tick={{ fill: '#1a2744', fontSize: 12, fontWeight: 500 }}
               axisLine={false}
               tickLine={false}
               width={75}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(13, 148, 136, 0.1)' }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(13, 148, 136, 0.08)' }} />
             <Bar
               dataKey="tanf_monthly"
               radius={[0, 4, 4, 0]}
               onClick={(data) => onStateSelect(data.state)}
               style={{ cursor: 'pointer' }}
             >
-              {topStates.map((entry, index) => (
+              {displayStates.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={entry.state === selectedState ? '#e85d4c' : '#0d9488'}
+                  fill={entry.state === selectedState ? '#EF4444' : '#319795'}
                   opacity={entry.state === selectedState ? 1 : 0.85}
                 />
               ))}
@@ -136,17 +123,13 @@ function StateRanking({ data, selectedState, onStateSelect, maxBenefit }) {
       </div>
 
       <div className="ranking-footer">
-        <p>Click a bar to select that state. Only states where you're eligible are shown.</p>
+        {allEligible.length > DEFAULT_COUNT && (
+          <button className="expand-btn" onClick={() => setExpanded(!expanded)}>
+            {expanded ? 'Show less' : `Show all ${allEligible.length} states`}
+          </button>
+        )}
+        <p>Click a bar to select that state</p>
       </div>
-
-      {failedStates.length > 0 && (
-        <div className="failed-states">
-          <p className="failed-states-label">Calculation unavailable:</p>
-          <p className="failed-states-list">
-            {failedStates.map(d => d.state_name || d.state).join(', ')}
-          </p>
-        </div>
-      )}
     </div>
   )
 }

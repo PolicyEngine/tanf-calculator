@@ -1,10 +1,7 @@
 import BenefitChart from './BenefitChart'
-import EligibilityExplanation from './EligibilityExplanation'
-import BenefitBreakdown from './BenefitBreakdown'
-import PovertyContext from './PovertyContext'
-import CombinedBenefitChart from './CombinedBenefitChart'
+import HouseholdSizeChart from './HouseholdSizeChart'
 
-function ResultsPanel({ result, chartData, combinedChartData, loading, error, onRetry }) {
+function ResultsPanel({ result, chartData, householdSizeData, comparisonData, loading, error, onRetry }) {
   if (error) {
     return (
       <section className="results-panel">
@@ -45,59 +42,95 @@ function ResultsPanel({ result, chartData, combinedChartData, loading, error, on
     }).format(amount)
   }
 
+  const fpgMonthly = result.poverty_context?.fpg_monthly
+  const currentIncome = (result.household.earned_income + result.household.unearned_income) / 12
+
+  // Find the income where benefit drops to $0
+  const cutoffIncome = chartData?.data
+    ? (() => {
+        const d = chartData.data
+        for (let i = 0; i < d.length; i++) {
+          if (d[i].tanf_monthly === 0 && i > 0 && d[i - 1].tanf_monthly > 0) {
+            return d[i].total_income_monthly
+          }
+        }
+        return null
+      })()
+    : null
+
+  // Max benefit (at $0 income)
+  const maxBenefit = result.breakdown?.max_benefit_monthly ?? result.tanf_monthly
+
+  // State rank
+  const stateRank = comparisonData
+    ? (() => {
+        const eligible = comparisonData.filter(d => !d.error && d.tanf_monthly > 0)
+        const idx = eligible.findIndex(d => d.state === result.state)
+        return idx >= 0 ? { rank: idx + 1, total: eligible.length } : null
+      })()
+    : null
+
   return (
     <section className="results-panel">
-      <div className={`result-card ${!result.eligible ? 'not-eligible' : ''}`}>
-        <h3>Estimated Monthly TANF Benefit</h3>
-        <div className="amount">{formatCurrency(result.tanf_monthly)}</div>
-        <div className="amount-annual">
-          {formatCurrency(result.tanf_annual)} per year
+      <div className={`result-banner ${!result.eligible ? 'not-eligible' : ''}`}>
+        <div className="result-banner-main">
+          <h3>Estimated Monthly TANF Benefit</h3>
+          <div className="amount">{formatCurrency(result.tanf_monthly)}</div>
+          <div className="amount-annual">{formatCurrency(result.tanf_annual)}/yr</div>
         </div>
-        <span className={`eligibility-status ${result.eligible ? 'eligible' : 'not-eligible'}`}>
-          {result.eligible ? 'Eligible' : 'Not Eligible'}
-        </span>
-        <EligibilityExplanation
-          eligibilityChecks={result.eligibility_checks}
-          eligible={result.eligible}
-          stateName={result.state_name}
-        />
+        <div className="result-banner-details">
+          <span className={`eligibility-status ${result.eligible ? 'eligible' : 'not-eligible'}`}>
+            {result.eligible ? 'Eligible' : 'Not Eligible'}
+          </span>
+          <div className="result-meta">
+            <span>{result.state_name} ({result.state})</span>
+            <span>{result.household.num_adults} adult(s), {result.household.num_children} child(ren)</span>
+            {result.eligible && fpgMonthly && (
+              <span>{Math.round(result.tanf_monthly / fpgMonthly * 100)}% of FPL</span>
+            )}
+          </div>
+        </div>
+        <div className="result-banner-stats">
+          <div className="stat-item">
+            <span className="stat-label">Max benefit</span>
+            <span className="stat-value">{formatCurrency(maxBenefit)}/mo</span>
+          </div>
+          {cutoffIncome && (
+            <div className="stat-item">
+              <span className="stat-label">Benefit ends at</span>
+              <span className="stat-value">{formatCurrency(cutoffIncome)}/mo income</span>
+            </div>
+          )}
+          {stateRank && (
+            <div className="stat-item">
+              <span className="stat-label">State rank</span>
+              <span className="stat-value">#{stateRank.rank} of {stateRank.total}</span>
+            </div>
+          )}
+        </div>
+        {!result.eligible && (
+          <div className="result-banner-ineligible">
+            This household does not qualify for TANF in {result.state_name}. Contact your local TANF office for details.
+          </div>
+        )}
       </div>
 
-      <div className="result-details">
-        <p>
-          <strong>State:</strong> {result.state_name} ({result.state})
-        </p>
-        <p>
-          <strong>Year:</strong> {result.year}
-        </p>
-        <p>
-          <strong>Household:</strong> {result.household.num_adults} adult(s), {result.household.num_children} child(ren)
-        </p>
-      </div>
-
-      <BenefitBreakdown
-        breakdown={result.breakdown}
-        tanfMonthly={result.tanf_monthly}
-      />
-
-      <PovertyContext
-        povertyContext={result.poverty_context}
-        tanfMonthly={result.tanf_monthly}
-      />
-
-      {chartData && (
-        <div className="chart-container">
-          <h3>TANF Benefit by Household Income</h3>
-          <BenefitChart data={chartData.data} />
+      {chartData && householdSizeData && (
+        <div className="charts-grid">
+          <div className="chart-container">
+            <h3>Benefit by Income</h3>
+            <BenefitChart data={chartData.data} />
+          </div>
+          <div className="chart-container">
+            <h3>Benefit by Household Size</h3>
+            <HouseholdSizeChart
+              data={householdSizeData}
+              currentChildren={result.household.num_children}
+            />
+          </div>
         </div>
       )}
 
-      {combinedChartData && (
-        <CombinedBenefitChart
-          data={combinedChartData.data}
-          programsAvailable={combinedChartData.programs_available}
-        />
-      )}
     </section>
   )
 }

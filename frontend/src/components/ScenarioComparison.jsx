@@ -1,17 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { loadStateData, getCountyGroup, lookupBenefit } from '../dataLookup'
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api'
+function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequired, metadata, states, onClose }) {
+  const earnedA = Math.round(defaultInputs.earned_income / 12)
+  const unearnedA = Math.round(defaultInputs.unearned_income / 12)
 
-function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequired, onClose }) {
-  // Store income as monthly for user-friendly input (defaultInputs has annual values)
   const [scenarioB, setScenarioB] = useState({
-    ...defaultInputs,
-    earned_income: Math.round(defaultInputs.earned_income / 12),
-    unearned_income: Math.round(defaultInputs.unearned_income / 12),
+    num_adults: defaultInputs.num_adults,
+    num_children: defaultInputs.num_children,
+    earned_income: earnedA,
+    unearned_income: unearnedA,
   })
-  const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [benefitA, setBenefitA] = useState(null)
+  const [benefitB, setBenefitB] = useState(null)
+  const [stateData, setStateData] = useState(null)
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat('en-US', {
@@ -21,150 +23,192 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
       maximumFractionDigits: 0,
     }).format(amount)
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setScenarioB(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) || 0 : value),
-    }))
+  // Load state data once
+  useEffect(() => {
+    const group = defaultInputs.county ? getCountyGroup(defaultInputs.state, defaultInputs.county) : null
+    loadStateData(defaultInputs.state, group).then(data => {
+      setStateData(data)
+    })
+  }, [defaultInputs.state, defaultInputs.county])
+
+  // Compute both benefits whenever stateData or scenarioB changes
+  const computeBenefits = useCallback(() => {
+    if (!stateData) return
+
+    const resultA = lookupBenefit(
+      stateData,
+      defaultInputs.num_adults,
+      defaultInputs.num_children,
+      defaultInputs.is_tanf_enrolled,
+      earnedA,
+      unearnedA,
+    )
+    setBenefitA(resultA)
+
+    const resultB = lookupBenefit(
+      stateData,
+      scenarioB.num_adults,
+      scenarioB.num_children,
+      defaultInputs.is_tanf_enrolled,
+      scenarioB.earned_income,
+      scenarioB.unearned_income,
+    )
+    setBenefitB(resultB)
+  }, [stateData, scenarioB, defaultInputs, earnedA, unearnedA])
+
+  useEffect(() => {
+    computeBenefits()
+  }, [computeBenefits])
+
+  const handleSlider = (name, value) => {
+    setScenarioB(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleCompare = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch(`${API_BASE}/calculate-comparison`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          scenario_a: defaultInputs,
-          scenario_b: {
-            ...scenarioB,
-            earned_income: scenarioB.earned_income * 12,
-            unearned_income: scenarioB.unearned_income * 12,
-          },
-        }),
-      })
-      if (!res.ok) {
-        const errData = await res.json()
-        throw new Error(errData.detail || 'Comparison failed')
-      }
-      const data = await res.json()
-      setResult(data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const diff = benefitA && benefitB ? benefitB.tanf_monthly - benefitA.tanf_monthly : 0
+  const hasChanges = scenarioB.num_adults !== defaultInputs.num_adults
+    || scenarioB.num_children !== defaultInputs.num_children
+    || scenarioB.earned_income !== earnedA
+    || scenarioB.unearned_income !== unearnedA
 
-  const isDifferent = (field) => {
-    if (field === 'earned_income' || field === 'unearned_income') {
-      return Math.round(defaultInputs[field] / 12) !== scenarioB[field]
-    }
-    return defaultInputs[field] !== scenarioB[field]
-  }
+  const sliders = [
+    {
+      name: 'num_children',
+      label: 'Children',
+      min: 0, max: 10, step: 1,
+      value: scenarioB.num_children,
+      originalValue: defaultInputs.num_children,
+      format: v => String(v),
+    },
+    {
+      name: 'earned_income',
+      label: 'Earned Income',
+      min: 0, max: 5000, step: 100,
+      value: scenarioB.earned_income,
+      originalValue: earnedA,
+      format: v => `${formatCurrency(v)}/mo`,
+    },
+    {
+      name: 'unearned_income',
+      label: 'Unearned Income',
+      min: 0, max: 2000, step: 100,
+      value: scenarioB.unearned_income,
+      originalValue: unearnedA,
+      format: v => `${formatCurrency(v)}/mo`,
+    },
+  ]
 
   return (
-    <section className="scenario-comparison">
-      <div className="scenario-header">
-        <h3>Compare Scenarios</h3>
-        <button className="scenario-close" onClick={onClose}>&times;</button>
+    <section className="scenario-comparison-v2">
+      {/* Current scenario summary */}
+      <div className="scenario-current">
+        <span className="scenario-current-label">Current</span>
+        <div className="scenario-current-chips">
+          <span className="scenario-chip">{defaultInputs.num_adults} Adult{defaultInputs.num_adults > 1 ? 's' : ''}</span>
+          <span className="scenario-chip">{defaultInputs.num_children} Child{defaultInputs.num_children !== 1 ? 'ren' : ''}</span>
+          <span className="scenario-chip">{formatCurrency(earnedA)}/mo earned</span>
+          <span className="scenario-chip">{formatCurrency(unearnedA)}/mo unearned</span>
+        </div>
+        {benefitA && (
+          <div className="scenario-current-benefit">
+            {formatCurrency(benefitA.tanf_monthly)}/mo
+          </div>
+        )}
       </div>
 
-      <div className="scenario-grid">
-        <div className="scenario-col">
-          <h4>Scenario A (Current)</h4>
-          <div className="scenario-summary">
-            <p><strong>Adults:</strong> {defaultInputs.num_adults}</p>
-            <p><strong>Children:</strong> {defaultInputs.num_children}</p>
-            <p><strong>Earned Income:</strong> {formatCurrency(defaultInputs.earned_income / 12)}/mo</p>
-            <p><strong>Unearned Income:</strong> {formatCurrency(defaultInputs.unearned_income / 12)}/mo</p>
-            <p><strong>Resources:</strong> {formatCurrency(defaultInputs.resources)}</p>
-          </div>
-        </div>
-
-        <div className="scenario-col scenario-b">
-          <h4>Scenario B (What If)</h4>
-          <div className="scenario-form">
-            <div className="scenario-field">
-              <label>Adults</label>
-              <select name="num_adults" value={scenarioB.num_adults} onChange={handleChange}
-                className={isDifferent('num_adults') ? 'changed' : ''}>
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-              </select>
-            </div>
-            <div className="scenario-field">
-              <label>Children</label>
-              <input type="number" name="num_children" min="0" max="10"
-                value={scenarioB.num_children} onChange={handleChange}
-                className={isDifferent('num_children') ? 'changed' : ''} />
-            </div>
-            <div className="scenario-field">
-              <label>Earned Income ($/mo)</label>
-              <input type="number" name="earned_income" min="0" step="100"
-                value={scenarioB.earned_income} onChange={handleChange}
-                className={isDifferent('earned_income') ? 'changed' : ''} />
-            </div>
-            <div className="scenario-field">
-              <label>Unearned Income ($/mo)</label>
-              <input type="number" name="unearned_income" min="0" step="100"
-                value={scenarioB.unearned_income} onChange={handleChange}
-                className={isDifferent('unearned_income') ? 'changed' : ''} />
-            </div>
-            <div className="scenario-field">
-              <label>Resources ($)</label>
-              <input type="number" name="resources" min="0" step="100"
-                value={scenarioB.resources} onChange={handleChange}
-                className={isDifferent('resources') ? 'changed' : ''} />
-            </div>
-          </div>
+      {/* Adults toggle + Sliders */}
+      <p className="scenario-hint">Adjust the values below to explore different scenarios</p>
+      <div className={`scenario-toggle-row ${scenarioB.num_adults !== defaultInputs.num_adults ? 'changed' : ''}`}>
+        <span className="scenario-slider-label">Adults</span>
+        <div className="scenario-toggle">
+          <button
+            className={`toggle-btn ${scenarioB.num_adults === 1 ? 'active' : ''}`}
+            onClick={() => handleSlider('num_adults', 1)}
+          >
+            1 (Single parent)
+          </button>
+          <button
+            className={`toggle-btn ${scenarioB.num_adults === 2 ? 'active' : ''}`}
+            onClick={() => handleSlider('num_adults', 2)}
+          >
+            2 (Two-parent)
+          </button>
         </div>
       </div>
+      <div className="scenario-sliders">
+        {sliders.map(s => {
+          const changed = s.value !== s.originalValue
+          return (
+            <div key={s.name} className={`scenario-slider-row ${changed ? 'changed' : ''}`}>
+              <div className="scenario-slider-header">
+                <span className="scenario-slider-label">{s.label}</span>
+                <span className={`scenario-slider-value ${changed ? 'changed' : ''}`}>
+                  {s.format(s.value)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={s.min}
+                max={s.max}
+                step={s.step}
+                value={s.value}
+                onChange={e => handleSlider(s.name, parseFloat(e.target.value))}
+                className="scenario-range"
+              />
+              <div className="scenario-slider-bounds">
+                <span>{s.format(s.min)}</span>
+                <span>{s.format(s.max)}</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
-      <div className="scenario-actions">
-        <button className="calculate-btn" onClick={handleCompare} disabled={loading}>
-          {loading ? 'Comparing...' : 'Compare'}
+      {/* Live result */}
+      {benefitA && benefitB && (
+        <div className={`scenario-live-result ${!hasChanges ? 'no-change' : ''}`}>
+          <div className="scenario-result-bar">
+            <div className="scenario-result-side">
+              <span className="scenario-result-tag">Current</span>
+              <span className={`scenario-result-val ${benefitA.eligible ? '' : 'not-eligible'}`}>
+                {formatCurrency(benefitA.tanf_monthly)}/mo
+              </span>
+            </div>
+
+            <div className={`scenario-result-diff ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : 'neutral'}`}>
+              <span className="diff-icon">{diff > 0 ? '\u2191' : diff < 0 ? '\u2193' : '='}</span>
+              <span className="diff-amount">
+                {diff > 0 ? '+' : ''}{formatCurrency(diff)}/mo
+              </span>
+            </div>
+
+            <div className="scenario-result-side">
+              <span className="scenario-result-tag">What If</span>
+              <span className={`scenario-result-val ${benefitB.eligible ? '' : 'not-eligible'}`}>
+                {formatCurrency(benefitB.tanf_monthly)}/mo
+              </span>
+            </div>
+          </div>
+
+          {benefitA.eligible !== benefitB.eligible && (
+            <div className="scenario-eligibility-change">
+              Eligibility changes: {benefitA.eligible ? 'Eligible' : 'Not Eligible'} → {benefitB.eligible ? 'Eligible' : 'Not Eligible'}
+            </div>
+          )}
+        </div>
+      )}
+
+      {hasChanges && (
+        <button
+          className="scenario-reset-btn"
+          onClick={() => setScenarioB({
+            num_adults: defaultInputs.num_adults,
+            num_children: defaultInputs.num_children,
+            earned_income: earnedA,
+            unearned_income: unearnedA,
+          })}
+        >
+          Reset to Current
         </button>
-      </div>
-
-      {error && <div className="error">{error}</div>}
-
-      {result && (
-        <div className="scenario-results">
-          <div className="scenario-result-grid">
-            <div className="scenario-result-col">
-              <div className="scenario-result-label">Scenario A</div>
-              <div className={`scenario-result-amount ${result.scenario_a.eligible ? '' : 'not-eligible'}`}>
-                {formatCurrency(result.scenario_a.tanf_monthly)}/mo
-              </div>
-              <span className={`eligibility-badge ${result.scenario_a.eligible ? 'eligible' : 'not-eligible'}`}>
-                {result.scenario_a.eligible ? 'Eligible' : 'Not Eligible'}
-              </span>
-            </div>
-
-            <div className="scenario-result-diff">
-              <div className="diff-arrow">
-                {result.difference.tanf_monthly > 0 ? '+' : ''}
-                {formatCurrency(result.difference.tanf_monthly)}/mo
-              </div>
-              {result.difference.eligible_changed && (
-                <div className="diff-note">Eligibility changed</div>
-              )}
-            </div>
-
-            <div className="scenario-result-col">
-              <div className="scenario-result-label">Scenario B</div>
-              <div className={`scenario-result-amount ${result.scenario_b.eligible ? '' : 'not-eligible'}`}>
-                {formatCurrency(result.scenario_b.tanf_monthly)}/mo
-              </div>
-              <span className={`eligibility-badge ${result.scenario_b.eligible ? 'eligible' : 'not-eligible'}`}>
-                {result.scenario_b.eligible ? 'Eligible' : 'Not Eligible'}
-              </span>
-            </div>
-          </div>
-        </div>
       )}
     </section>
   )

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   LineChart,
   Line,
@@ -12,41 +13,33 @@ import {
 function BenefitChart({ data }) {
   const formatCurrency = (value) => `$${value.toLocaleString()}`
 
+  // Compute clean Y-axis domain based on max benefit
+  const yDomain = useMemo(() => {
+    if (!data || data.length === 0) return [0, 500]
+    const maxVal = Math.max(...data.map(d => d.tanf_monthly))
+    // Round up to nearest nice increment
+    const niceSteps = [100, 200, 250, 500, 1000, 1500, 2000, 2500, 3000]
+    const target = maxVal * 1.1
+    const nice = niceSteps.find(s => s >= target) || Math.ceil(target / 500) * 500
+    return [0, nice]
+  }, [data])
+
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div style={{
           background: '#1a2744',
-          padding: '16px 20px',
+          padding: '14px 18px',
           borderRadius: '8px',
           boxShadow: '0 12px 32px rgba(26, 39, 68, 0.25)',
           color: 'white',
-          fontFamily: "'Source Sans 3', sans-serif",
+          fontFamily: "'Inter', sans-serif",
         }}>
           <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.7, marginBottom: '4px' }}>
-            Monthly Household Income
+            Income: {formatCurrency(label)}/mo
           </p>
-          <p style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '12px' }}>
-            {formatCurrency(label)}/mo
-          </p>
-          <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.7, marginBottom: '4px' }}>
-            Monthly TANF Benefit
-          </p>
-          <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#e85d4c', fontFamily: "'Libre Baskerville', serif" }}>
-            {formatCurrency(payload[0].value)}
-          </p>
-          <p style={{
-            marginTop: '12px',
-            fontSize: '0.8rem',
-            padding: '4px 10px',
-            background: payload[0].payload.eligible ? '#0d9488' : 'rgba(255,255,255,0.15)',
-            borderRadius: '100px',
-            display: 'inline-block',
-            textTransform: 'uppercase',
-            letterSpacing: '0.03em',
-            fontWeight: 600,
-          }}>
-            {payload[0].payload.eligible ? '✓ Eligible' : 'Not Eligible'}
+          <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#4FD1C5' }}>
+            TANF: {formatCurrency(payload[0].value)}/mo
           </p>
         </div>
       )
@@ -59,22 +52,23 @@ function BenefitChart({ data }) {
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
-          margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+          margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e2dd" />
           <XAxis
             dataKey="total_income_monthly"
             tickFormatter={(v) => `$${v.toLocaleString()}`}
-            label={{ value: 'Monthly Household Income', position: 'bottom', offset: -5, fill: '#6b7280', fontSize: 12 }}
-            tick={{ fill: '#6b7280', fontSize: 12 }}
+            label={{ value: 'Monthly Household Income', position: 'bottom', offset: -5, fill: '#6b7280', fontSize: 11 }}
+            tick={{ fill: '#6b7280', fontSize: 11 }}
             axisLine={{ stroke: '#e5e2dd' }}
             tickLine={{ stroke: '#e5e2dd' }}
-            interval={Math.max(0, Math.ceil((data?.length || 1) / 10) - 1)}
+            interval={Math.max(0, Math.ceil((data?.length || 1) / 8) - 1)}
           />
           <YAxis
+            domain={yDomain}
             tickFormatter={(v) => `$${v.toLocaleString()}`}
-            label={{ value: 'Monthly TANF Benefit ($)', angle: -90, position: 'insideLeft', fill: '#6b7280', fontSize: 12 }}
-            tick={{ fill: '#6b7280', fontSize: 12 }}
+            label={{ value: 'Monthly TANF Benefit ($)', angle: -90, position: 'insideLeft', dx: -5, style: { textAnchor: 'middle', fill: '#6b7280', fontSize: 11 } }}
+            tick={{ fill: '#6b7280', fontSize: 11 }}
             axisLine={{ stroke: '#e5e2dd' }}
             tickLine={{ stroke: '#e5e2dd' }}
           />
@@ -83,10 +77,10 @@ function BenefitChart({ data }) {
           <Line
             type="stepAfter"
             dataKey="tanf_monthly"
-            stroke="#0d9488"
-            strokeWidth={3}
+            stroke="#319795"
+            strokeWidth={2.5}
             dot={false}
-            activeDot={{ r: 8, fill: '#e85d4c', stroke: '#1a2744', strokeWidth: 2 }}
+            activeDot={{ r: 6, fill: '#EF4444', stroke: '#1a2744', strokeWidth: 2 }}
           />
         </LineChart>
       </ResponsiveContainer>

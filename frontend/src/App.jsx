@@ -1,11 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import StateMap from './components/StateMap'
 import InputPanel from './components/InputPanel'
 import ResultsPanel from './components/ResultsPanel'
 import StateRanking from './components/StateRanking'
+import TotalResourcesChart from './components/TotalResourcesChart'
 import ScenarioComparison from './components/ScenarioComparison'
-
-const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.PROD ? 'https://tanf-calculator.fly.dev' : '/api')
+import {
+  loadMetadata,
+  loadStateData,
+  getCountyGroup,
+  buildResult,
+  generateChartData,
+  generateHouseholdSizeData,
+  calculateAllStates,
+} from './dataLookup'
 
 function App() {
   const [states, setStates] = useState([])
@@ -17,38 +25,36 @@ function App() {
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
   const [chartData, setChartData] = useState(null)
-  const [combinedChartData, setCombinedChartData] = useState(null)
+  const [householdSizeData, setHouseholdSizeData] = useState(null)
   const [comparisonData, setComparisonData] = useState(null)
   const [maxBenefit, setMaxBenefit] = useState(0)
   const [lastInputs, setLastInputs] = useState(null)
-  const [showComparison, setShowComparison] = useState(false)
+  const [activeTab, setActiveTab] = useState('Total Resources')
+  const [metadata, setMetadata] = useState(null)
+  const resultsRef = useRef(null)
 
-  // Fetch available states on mount
+  // Load metadata on mount
   useEffect(() => {
-    fetch(`${API_BASE}/states`)
-      .then(res => res.json())
-      .then(data => setStates(data.states))
-      .catch(err => console.error('Failed to fetch states:', err))
+    loadMetadata()
+      .then(meta => {
+        setMetadata(meta)
+        setStates(meta.states)
+      })
+      .catch(err => console.error('Failed to load metadata:', err))
   }, [])
 
-  // Fetch counties when state changes
+  // Update county info when state changes
   useEffect(() => {
-    const fetchCounties = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/counties/${selectedState}`)
-        const data = await res.json()
-        setCounties(data.counties || [])
-        setCountyRequired(data.required || false)
-      } catch (err) {
-        console.error('Failed to fetch counties:', err)
-        setCounties([])
-        setCountyRequired(false)
-      }
+    if (!metadata) return
+    const stateInfo = metadata.states.find(s => s.code === selectedState)
+    if (stateInfo?.requires_county && metadata.county_data?.[selectedState]) {
+      setCounties(metadata.county_data[selectedState].counties || [])
+      setCountyRequired(true)
+    } else {
+      setCounties([])
+      setCountyRequired(false)
     }
-    if (selectedState) {
-      fetchCounties()
-    }
-  }, [selectedState])
+  }, [selectedState, metadata])
 
   const handleStateSelect = (stateCode) => {
     setSelectedState(stateCode)
@@ -57,11 +63,11 @@ function App() {
   const clearResults = () => {
     setResult(null)
     setChartData(null)
-    setCombinedChartData(null)
+    setHouseholdSizeData(null)
     setComparisonData(null)
     setMaxBenefit(0)
     setError(null)
-    setShowComparison(false)
+    setActiveTab('Total Resources')
   }
 
   const handleInputChange = () => {
@@ -77,86 +83,77 @@ function App() {
     setLoading(true)
     setError(null)
     setLastInputs(inputs)
-    setShowComparison(false)
+    setActiveTab('Total Resources')
 
     try {
-      // Fire single calculation + TANF range + combined range in parallel
-      const [calcRes, rangeRes, combinedRes] = await Promise.all([
-        fetch(`${API_BASE}/calculate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(inputs),
-        }),
-        fetch(`${API_BASE}/calculate-range`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...inputs,
-            income_min: 0,
-            income_max: 50000,
-            income_step: 600,
-          }),
-        }),
-        fetch(`${API_BASE}/calculate-combined-range`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...inputs,
-            income_min: 0,
-            income_max: 50000,
-            income_step: 1200,
-          }),
-        }),
-      ])
+      // Determine which data file to load
+      const earnedMonthly = inputs.earned_income / 12
+      const unearnedMonthly = inputs.unearned_income / 12
+      const group = inputs.county ? getCountyGroup(inputs.state, inputs.county) : null
 
-      if (!calcRes.ok) {
-        const errData = await calcRes.json()
-        throw new Error(errData.detail || 'Calculation failed')
-      }
+      const stateData = await loadStateData(inputs.state, group)
+      const stateName = states.find(s => s.code === inputs.state)?.name || inputs.state
 
-      const calcData = await calcRes.json()
-      const rangeData = rangeRes.ok ? await rangeRes.json() : null
-      const combinedData = combinedRes.ok ? await combinedRes.json() : null
+      // Build result from precomputed data
+      const calcResult = buildResult(
+        stateData,
+        inputs.state,
+        stateName,
+        inputs.num_adults,
+        inputs.num_children,
+        inputs.is_tanf_enrolled,
+        earnedMonthly,
+        unearnedMonthly,
+      )
 
-      setResult(calcData)
-      setChartData(rangeData)
-      setCombinedChartData(combinedData)
+      // Generate chart data from precomputed grid
+      const rangeData = generateChartData(
+        stateData,
+        inputs.num_adults,
+        inputs.num_children,
+        inputs.is_tanf_enrolled,
+        earnedMonthly,
+        unearnedMonthly,
+      )
+
+      // Generate household size comparison data
+      const sizeData = generateHouseholdSizeData(
+        stateData,
+        inputs.num_adults,
+        inputs.is_tanf_enrolled,
+        earnedMonthly,
+        unearnedMonthly,
+      )
+
+      setResult(calcResult)
+      setChartData({ data: rangeData })
+      setHouseholdSizeData(sizeData)
       setLoading(false)
 
-      // Now fire all-states comparison as a follow-up
+      // Scroll to results
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+
+      // Fire all-states comparison (loads all state files)
       setComparisonLoading(true)
       try {
-        const allStatesRes = await fetch(`${API_BASE}/calculate-all-states`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            year: inputs.year,
-            num_adults: inputs.num_adults,
-            num_children: inputs.num_children,
-            earned_income: inputs.earned_income,
-            unearned_income: inputs.unearned_income,
-            child_ages: inputs.child_ages,
-            is_tanf_enrolled: inputs.is_tanf_enrolled,
-            resources: inputs.resources,
-          }),
-        })
-        if (allStatesRes.ok) {
-          const allStatesData = await allStatesRes.json()
-          setComparisonData(allStatesData.states)
-          setMaxBenefit(allStatesData.max_benefit)
-        }
+        const allStatesResult = await calculateAllStates(
+          inputs.num_adults,
+          inputs.num_children,
+          inputs.is_tanf_enrolled,
+          earnedMonthly,
+          unearnedMonthly,
+        )
+        setComparisonData(allStatesResult.states)
+        setMaxBenefit(allStatesResult.max_benefit)
       } catch {
-        // Comparison failure is non-critical — results are already shown
         console.error('Failed to load state comparison')
       } finally {
         setComparisonLoading(false)
       }
     } catch (err) {
-      if (err instanceof TypeError && err.message === 'Failed to fetch') {
-        setError('Unable to connect to the calculator service. Please check that the backend is running.')
-      } else {
-        setError(err.message)
-      }
+      setError(err.message || 'Calculation failed. Please try again.')
       setLoading(false)
     }
   }
@@ -207,46 +204,82 @@ function App() {
         </section>
       </div>
 
+      <div ref={resultsRef} />
       {(result || loading || error) && (
         <ResultsPanel
           result={result}
           chartData={chartData}
-          combinedChartData={combinedChartData}
+          householdSizeData={householdSizeData}
+          comparisonData={comparisonData}
           loading={loading}
           error={error}
           onRetry={lastInputs ? handleRetry : null}
         />
       )}
 
-      {result && !showComparison && (
-        <div className="compare-button-container">
-          <button
-            className="compare-btn"
-            onClick={() => setShowComparison(true)}
-          >
-            Compare Scenarios
-          </button>
-        </div>
-      )}
-
-      {showComparison && lastInputs && (
-        <ScenarioComparison
-          defaultInputs={lastInputs}
-          selectedState={selectedState}
-          counties={counties}
-          countyRequired={countyRequired}
-          onClose={() => setShowComparison(false)}
-        />
-      )}
-
-      {comparisonData && (
-        <section className="comparison-section">
-          <StateRanking
-            data={comparisonData}
-            selectedState={selectedState}
-            onStateSelect={handleStateSelect}
-            maxBenefit={maxBenefit}
-          />
+      {result && (
+        <section className="tabbed-section">
+          <div className="tab-bar">
+            {['Total Resources', 'State Comparison', 'Scenario Comparison'].map(tab => (
+              <button
+                key={tab}
+                className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div className="tab-content">
+            {activeTab === 'Total Resources' && chartData && (
+              <div>
+                <p className="chart-subtitle">Shows how your total monthly resources change as income rises</p>
+                <TotalResourcesChart
+                  data={chartData.data}
+                  currentIncome={(result.household.earned_income + result.household.unearned_income) / 12}
+                  fpgMonthly={result.poverty_context?.fpg_monthly}
+                />
+                <div className="total-resources-legend">
+                  <div className="legend-chip">
+                    <span className="legend-dot" style={{ background: '#1E293B' }} />
+                    <span>Earned Income</span>
+                  </div>
+                  <div className="legend-chip">
+                    <span className="legend-dot" style={{ background: '#319795' }} />
+                    <span>TANF Benefit</span>
+                  </div>
+                  {result.poverty_context?.fpg_monthly && (
+                    <div className="legend-chip">
+                      <span className="legend-dot" style={{ background: '#EF4444', width: 16, height: 2, borderRadius: 0 }} />
+                      <span>Federal Poverty Level</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {activeTab === 'State Comparison' && comparisonData && (
+              <StateRanking
+                data={comparisonData}
+                selectedState={selectedState}
+                onStateSelect={handleStateSelect}
+                maxBenefit={maxBenefit}
+              />
+            )}
+            {activeTab === 'State Comparison' && !comparisonData && comparisonLoading && (
+              <div className="loading">Loading state comparison...</div>
+            )}
+            {activeTab === 'Scenario Comparison' && lastInputs && (
+              <ScenarioComparison
+                defaultInputs={lastInputs}
+                selectedState={selectedState}
+                counties={counties}
+                countyRequired={countyRequired}
+                metadata={metadata}
+                states={states}
+                onClose={() => setActiveTab('Total Resources')}
+              />
+            )}
+          </div>
         </section>
       )}
     </div>

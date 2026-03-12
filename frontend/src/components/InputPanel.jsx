@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react'
 
+function InfoTooltip({ text }) {
+  return (
+    <span className="info-tooltip-wrapper">
+      <span className="info-tooltip-icon">i</span>
+      <span className="info-tooltip-text">{text}</span>
+    </span>
+  )
+}
+
 const INITIAL_FORM_DATA = {
-  year: 2025,
   num_adults: 1,
   num_children: 2,
   earned_income: 0,
   unearned_income: 0,
   county: '',
   is_tanf_enrolled: false,
-  resources: 0,
 }
 
 function InputPanel({ selectedState, states, counties, countyRequired, onCalculate, onInputChange, onReset, onStateSelect, loading }) {
@@ -47,6 +54,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
     const submitData = {
       ...formData,
       state: selectedState,
+      year: 2025,
       earned_income: formData.earned_income * 12,
       unearned_income: formData.unearned_income * 12,
     }
@@ -66,6 +74,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
       <h2>Household Information</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-grid">
+          {/* Row 1: State + County (county always occupies space) */}
           <div className="form-group">
             <label htmlFor="state">State</label>
             <select
@@ -80,38 +89,27 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
             </select>
           </div>
 
-          {countyRequired && counties.length > 0 && (
-            <div className="form-group">
-              <label htmlFor="county">County</label>
-              <select
-                id="county"
-                name="county"
-                value={formData.county}
-                onChange={handleChange}
-              >
-                {counties.map(c => (
-                  <option key={c.code} value={c.code}>
-                    {c.name} {c.region && `(Region ${c.region})`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="year">Year</label>
+          <div className={`form-group ${!countyRequired ? 'form-group-hidden' : ''}`}>
+            <label htmlFor="county">County</label>
             <select
-              id="year"
-              name="year"
-              value={formData.year}
+              id="county"
+              name="county"
+              value={formData.county}
               onChange={handleChange}
+              disabled={!countyRequired}
             >
-              <option value={2025}>2025</option>
-              <option value={2024}>2024</option>
-              <option value={2023}>2023</option>
+              {countyRequired && counties.length > 0
+                ? counties.map(c => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))
+                : <option value="">N/A</option>
+              }
             </select>
           </div>
 
+          {/* Row 2: Adults + Children */}
           <div className="form-group">
             <label htmlFor="num_adults">Adults</label>
             <select
@@ -138,8 +136,12 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
             />
           </div>
 
+          {/* Row 3: Income */}
           <div className="form-group">
-            <label htmlFor="earned_income">Earned Income ($/mo)</label>
+            <label htmlFor="earned_income">
+              Earned Income ($/month)
+              <InfoTooltip text="Income from wages, salaries, tips, and self-employment. This is money you receive from working." />
+            </label>
             <input
               type="number"
               id="earned_income"
@@ -152,7 +154,10 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
           </div>
 
           <div className="form-group">
-            <label htmlFor="unearned_income">Unearned Income ($/mo)</label>
+            <label htmlFor="unearned_income">
+              Unearned Income ($/month)
+              <InfoTooltip text="Income not from employment, such as Social Security, SSI, child support, pensions, unemployment benefits, or rental income." />
+            </label>
             <input
               type="number"
               id="unearned_income"
@@ -164,19 +169,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="resources">Resources/Assets ($)</label>
-            <input
-              type="number"
-              id="resources"
-              name="resources"
-              min="0"
-              step="100"
-              value={formData.resources}
-              onChange={handleChange}
-            />
-          </div>
-
+          {/* Row 4: Checkbox + Buttons */}
           <div className="form-group checkbox-group">
             <label className="checkbox-label">
               <input

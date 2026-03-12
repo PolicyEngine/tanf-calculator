@@ -205,8 +205,8 @@ function StateMap({ selectedState, availableStates, onStateSelect, comparisonDat
         {getTooltipContent() || <span style={{ opacity: 0.5 }}>Hover over a state</span>}
       </div>
 
-      {/* Legend - different for heatmap mode */}
-      {isHeatmapMode ? (
+      {/* Legend - only for heatmap mode */}
+      {isHeatmapMode && (
         <div className="heatmap-legend">
           <span className="legend-label">Lower benefit</span>
           <div className="gradient-bar">
@@ -216,28 +216,7 @@ function StateMap({ selectedState, availableStates, onStateSelect, comparisonDat
           </div>
           <span className="legend-label">Higher benefit</span>
         </div>
-      ) : (
-        <div className="map-legend">
-          <div className="legend-item">
-            <span className="legend-color selected"></span>
-            <span>Selected</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color available"></span>
-            <span>Available</span>
-          </div>
-        </div>
       )}
-
-      {/* Selected state display */}
-      <div className="selected-state-display">
-        Selected: <strong>{STATE_NAMES[selectedState] || 'None'}</strong>
-        {isHeatmapMode && benefitMap[selectedState] && (
-          <span className="selected-benefit">
-            {formatCurrency(benefitMap[selectedState].tanf_monthly)}/mo
-          </span>
-        )}
-      </div>
     </div>
   )
 }
