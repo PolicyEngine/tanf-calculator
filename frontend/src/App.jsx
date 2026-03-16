@@ -56,8 +56,48 @@ function App() {
     }
   }, [selectedState, metadata])
 
-  const handleStateSelect = (stateCode) => {
+  const handleStateSelect = async (stateCode) => {
     setSelectedState(stateCode)
+
+    // If we already have results, recalculate for the new state
+    if (lastInputs && result) {
+      const updatedInputs = { ...lastInputs, state: stateCode }
+      // Remove county for non-county states
+      const stateInfo = metadata?.states.find(s => s.code === stateCode)
+      if (!stateInfo?.requires_county) {
+        delete updatedInputs.county
+      }
+
+      try {
+        const earnedMonthly = updatedInputs.earned_income / 12
+        const unearnedMonthly = updatedInputs.unearned_income / 12
+        const group = updatedInputs.county ? getCountyGroup(stateCode, updatedInputs.county) : null
+
+        const stateData = await loadStateData(stateCode, group)
+        const stateName = states.find(s => s.code === stateCode)?.name || stateCode
+
+        const calcResult = buildResult(
+          stateData, stateCode, stateName,
+          updatedInputs.num_adults, updatedInputs.num_children,
+          updatedInputs.is_tanf_enrolled, earnedMonthly, unearnedMonthly,
+        )
+        const rangeData = generateChartData(
+          stateData, updatedInputs.num_adults, updatedInputs.num_children,
+          updatedInputs.is_tanf_enrolled, earnedMonthly, unearnedMonthly,
+        )
+        const sizeData = generateHouseholdSizeData(
+          stateData, updatedInputs.num_adults,
+          updatedInputs.is_tanf_enrolled, earnedMonthly, unearnedMonthly,
+        )
+
+        setResult(calcResult)
+        setChartData({ data: rangeData })
+        setHouseholdSizeData(sizeData)
+        setLastInputs(updatedInputs)
+      } catch {
+        // If state data fails to load, just update the selection
+      }
+    }
   }
 
   const clearResults = () => {

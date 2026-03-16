@@ -120,7 +120,11 @@ def build_metadata():
         "HI": {"base": 18000, "per_additional": 6330},
     }
 
+    from importlib.metadata import version as pkg_version
+    policyengine_version = pkg_version("policyengine-us")
+
     metadata = {
+        "policyengine_us_version": policyengine_version,
         "year": YEAR,
         "earned_steps": EARNED_STEPS,
         "unearned_steps": UNEARNED_STEPS,
@@ -203,6 +207,8 @@ def main():
     )
     total_sims = sims_per_state * len(tasks)
 
+    from importlib.metadata import version as pkg_version
+    print(f"policyengine-us version: {pkg_version('policyengine-us')}")
     print(f"Precomputing {len(tasks)} state files...")
     print(
         f"Grid: {len(EARNED_STEPS)} earned x {len(UNEARNED_STEPS)} unearned"
