@@ -18,8 +18,23 @@ const INITIAL_FORM_DATA = {
   is_tanf_enrolled: false,
 }
 
+const formatWithCommas = (value) => {
+  const num = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value
+  if (isNaN(num)) return '0'
+  return num.toLocaleString('en-US')
+}
+
+const parseCommaNumber = (str) => {
+  const num = parseFloat(str.replace(/,/g, ''))
+  return isNaN(num) ? 0 : num
+}
+
 function InputPanel({ selectedState, states, counties, countyRequired, onCalculate, onInputChange, onReset, onStateSelect, loading }) {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA)
+  const [incomeDisplay, setIncomeDisplay] = useState({
+    earned_income: '0',
+    unearned_income: '0',
+  })
 
   // Reset county when state changes
   useEffect(() => {
@@ -48,6 +63,26 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
     if (onInputChange) onInputChange()
   }
 
+  const handleIncomeChange = (e) => {
+    const { name, value } = e.target
+    const cleaned = value.replace(/[^0-9]/g, '')
+    const num = parseFloat(cleaned) || 0
+    setIncomeDisplay(prev => ({ ...prev, [name]: num === 0 ? '' : formatWithCommas(num) }))
+    setFormData(prev => ({ ...prev, [name]: num }))
+    if (onInputChange) onInputChange()
+  }
+
+  const handleIncomeBlur = (e) => {
+    const { name } = e.target
+    setIncomeDisplay(prev => ({ ...prev, [name]: formatWithCommas(formData[name]) }))
+  }
+
+  const handleIncomeFocus = (e) => {
+    const { name } = e.target
+    const val = formData[name]
+    setIncomeDisplay(prev => ({ ...prev, [name]: val === 0 ? '' : formatWithCommas(val) }))
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     // Build submit data with state from props, converting monthly income to annual
@@ -66,6 +101,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
 
   const handleReset = () => {
     setFormData(INITIAL_FORM_DATA)
+    setIncomeDisplay({ earned_income: '0', unearned_income: '0' })
     if (onReset) onReset()
   }
 
@@ -143,46 +179,52 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
               <InfoTooltip text="Income from wages, salaries, tips, and self-employment. This is money you receive from working." />
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               id="earned_income"
               name="earned_income"
-              min="0"
-              step="100"
-              value={formData.earned_income}
-              onChange={handleChange}
+              value={incomeDisplay.earned_income}
+              onChange={handleIncomeChange}
+              onBlur={handleIncomeBlur}
+              onFocus={handleIncomeFocus}
             />
           </div>
 
           <div className="form-group">
             <label htmlFor="unearned_income">
               Unearned Income ($/month)
-              <InfoTooltip text="Income not from employment, such as Social Security, SSI, child support, pensions, unemployment benefits, or rental income." />
+              <InfoTooltip text="Income not from employment, such as Social Security, child support, pensions, unemployment benefits, or rental income." />
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               id="unearned_income"
               name="unearned_income"
-              min="0"
-              step="100"
-              value={formData.unearned_income}
-              onChange={handleChange}
+              value={incomeDisplay.unearned_income}
+              onChange={handleIncomeChange}
+              onBlur={handleIncomeBlur}
+              onFocus={handleIncomeFocus}
             />
           </div>
 
-          {/* Row 4: Checkbox + Buttons */}
-          <div className="form-group checkbox-group">
-            <label className="checkbox-label">
+        </div>
+
+        {/* Action row: toggle + buttons on one line */}
+        <div className="form-actions">
+          <label className="toggle-label">
+            <span className={`toggle-switch ${formData.is_tanf_enrolled ? 'active' : ''}`}>
               <input
                 type="checkbox"
                 name="is_tanf_enrolled"
                 checked={formData.is_tanf_enrolled}
                 onChange={handleChange}
               />
-              <span>Currently receiving TANF</span>
-            </label>
-          </div>
+              <span className="toggle-track" />
+            </span>
+            <span>Currently on TANF</span>
+          </label>
 
-          <div className="form-group form-group-button">
+          <div className="form-buttons">
             <button
               type="button"
               className="reset-btn"

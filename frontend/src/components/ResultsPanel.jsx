@@ -97,8 +97,8 @@ function ResultsPanel({ result, chartData, householdSizeData, comparisonData, lo
           </div>
           {cutoffIncome && (
             <div className="stat-item">
-              <span className="stat-label">Benefit ends at</span>
-              <span className="stat-value">{formatCurrency(cutoffIncome)}/mo income</span>
+              <span className="stat-label">Eligibility cutoff</span>
+              <span className="stat-value">{formatCurrency(cutoffIncome)}/mo</span>
             </div>
           )}
           {stateRank && (

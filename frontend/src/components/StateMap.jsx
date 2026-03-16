@@ -66,12 +66,12 @@ function StateMap({ selectedState, availableStates, onStateSelect, comparisonDat
     return map
   }, [comparisonData])
 
-  const isHeatmapMode = comparisonData && comparisonData.length > 0 && maxBenefit > 0
+  const isHeatmapMode = comparisonData && comparisonData.length > 0
 
   // Get color for heatmap mode based on benefit amount
   const getHeatmapColor = (stateCode) => {
     const data = benefitMap[stateCode]
-    if (!data || data.tanf_monthly <= 0) {
+    if (!data || data.tanf_monthly <= 0 || maxBenefit <= 0) {
       return '#f0ede8' // No benefit - cream
     }
     const ratio = data.tanf_monthly / maxBenefit
@@ -183,7 +183,7 @@ function StateMap({ selectedState, availableStates, onStateSelect, comparisonDat
                     geography={geo}
                     fill={isHovered ? getHoverColor(stateCode) : getStateColor(stateCode)}
                     stroke={isSelected ? '#1a2744' : '#fff'}
-                    strokeWidth={isSelected ? 2.5 : 0.5}
+                    strokeWidth={isSelected ? 1.5 : 0.5}
                     style={{
                       default: { outline: 'none' },
                       hover: { outline: 'none', cursor: 'pointer' },
@@ -200,9 +200,33 @@ function StateMap({ selectedState, availableStates, onStateSelect, comparisonDat
         </ComposableMap>
       </div>
 
-      {/* Tooltip */}
-      <div className="map-tooltip">
-        {getTooltipContent() || <span style={{ opacity: 0.5 }}>Hover over a state</span>}
+      {/* State info display */}
+      <div className="map-state-info">
+        {/* Selected state - always visible */}
+        <div className={`map-state-card selected ${hoveredState && hoveredState !== selectedState ? 'dimmed' : ''}`}>
+          <strong>{STATE_NAMES[selectedState] || selectedState}</strong>
+          {isHeatmapMode && benefitMap[selectedState] ? (
+            <span className="benefit-amount">
+              {benefitMap[selectedState].tanf_monthly > 0
+                ? formatCurrency(benefitMap[selectedState].tanf_monthly) + '/mo'
+                : 'Not eligible'}
+            </span>
+          ) : null}
+        </div>
+
+        {/* Hovered state - only when hovering a different state */}
+        {hoveredState && hoveredState !== selectedState && (
+          <div className="map-state-card hovered">
+            <strong>{STATE_NAMES[hoveredState]}</strong>
+            {isHeatmapMode && benefitMap[hoveredState] ? (
+              <span className="benefit-amount">
+                {benefitMap[hoveredState].tanf_monthly > 0
+                  ? formatCurrency(benefitMap[hoveredState].tanf_monthly) + '/mo'
+                  : 'Not eligible'}
+              </span>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {/* Legend - only for heatmap mode */}

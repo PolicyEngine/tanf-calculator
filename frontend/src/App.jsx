@@ -29,7 +29,7 @@ function App() {
   const [comparisonData, setComparisonData] = useState(null)
   const [maxBenefit, setMaxBenefit] = useState(0)
   const [lastInputs, setLastInputs] = useState(null)
-  const [activeTab, setActiveTab] = useState('Total Resources')
+  const [activeTab, setActiveTab] = useState('Income & Benefits')
   const [metadata, setMetadata] = useState(null)
   const resultsRef = useRef(null)
 
@@ -67,7 +67,7 @@ function App() {
     setComparisonData(null)
     setMaxBenefit(0)
     setError(null)
-    setActiveTab('Total Resources')
+    setActiveTab('Income & Benefits')
   }
 
   const handleInputChange = () => {
@@ -83,7 +83,7 @@ function App() {
     setLoading(true)
     setError(null)
     setLastInputs(inputs)
-    setActiveTab('Total Resources')
+    setActiveTab('Income & Benefits')
 
     try {
       // Determine which data file to load
@@ -220,7 +220,7 @@ function App() {
       {result && (
         <section className="tabbed-section">
           <div className="tab-bar">
-            {['Total Resources', 'State Comparison', 'Scenario Comparison'].map(tab => (
+            {['Income & Benefits', 'State Comparison', 'Scenario Comparison'].map(tab => (
               <button
                 key={tab}
                 className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
@@ -231,7 +231,7 @@ function App() {
             ))}
           </div>
           <div className="tab-content">
-            {activeTab === 'Total Resources' && chartData && (
+            {activeTab === 'Income & Benefits' && chartData && (
               <div>
                 <p className="chart-subtitle">Shows how your total monthly resources change as income rises</p>
                 <TotalResourcesChart
@@ -276,12 +276,19 @@ function App() {
                 countyRequired={countyRequired}
                 metadata={metadata}
                 states={states}
-                onClose={() => setActiveTab('Total Resources')}
+                onClose={() => setActiveTab('Income & Benefits')}
               />
             )}
           </div>
         </section>
       )}
+
+      <footer className="app-footer">
+        <p>
+          Other factors may also affect your TANF benefit, including assets, child care costs, housing expenses, and disability status.
+          For a more detailed household simulation with additional inputs, visit <a href="https://policyengine.org" target="_blank" rel="noopener noreferrer">PolicyEngine.org</a>.
+        </p>
+      </footer>
     </div>
   )
 }

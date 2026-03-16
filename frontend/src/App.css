@@ -141,15 +141,82 @@ body {
 .input-panel form {
   display: flex;
   flex-direction: column;
-  flex: 1;
 }
 
 .input-panel .form-grid {
-  flex: 1;
 }
 
 .input-panel .form-group-button {
   margin-top: auto;
+}
+
+/* Action row: toggle + buttons */
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  gap: 1rem;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Toggle switch */
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-navy);
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--color-border);
+  border-radius: 10px;
+  transition: var(--transition);
+}
+
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-switch.active .toggle-track {
+  background: var(--color-teal);
+}
+
+.toggle-switch.active .toggle-track::after {
+  left: 18px;
 }
 
 
@@ -188,7 +255,7 @@ body {
 .form-group label {
   display: block;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   margin-bottom: 0.5rem;
   color: var(--color-navy);
   text-transform: uppercase;
@@ -225,8 +292,7 @@ body {
   opacity: 0;
   position: absolute;
   bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
   background: var(--color-navy);
   color: white;
   padding: 8px 12px;
@@ -248,8 +314,7 @@ body {
   content: '';
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 2px;
   border: 6px solid transparent;
   border-top-color: var(--color-navy);
 }
@@ -260,7 +325,8 @@ body {
 }
 
 .form-group select,
-.form-group input[type="number"] {
+.form-group input[type="number"],
+.form-group input[type="text"] {
   width: 100%;
   padding: 0.875rem 1rem;
   border: 2px solid var(--color-border);
@@ -282,12 +348,14 @@ body {
 }
 
 .form-group select:hover,
-.form-group input[type="number"]:hover {
+.form-group input[type="number"],
+.form-group input[type="text"]:hover {
   border-color: var(--color-teal);
 }
 
 .form-group select:focus,
-.form-group input[type="number"]:focus {
+.form-group input[type="number"],
+.form-group input[type="text"]:focus {
   outline: none;
   border-color: var(--color-teal);
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
@@ -301,36 +369,7 @@ body {
   font-size: 0.8rem;
 }
 
-/* Checkbox Group */
-.checkbox-group {
-  padding: 0.875rem 1.25rem;
-  background: var(--color-cream);
-  border-radius: var(--radius-md);
-  border: 2px solid var(--color-border);
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-}
-
-.checkbox-group:hover {
-  border-color: var(--color-teal);
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  font-weight: 500;
-  color: var(--color-navy);
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: var(--color-teal);
-}
+/* (checkbox-group styles removed — replaced by toggle switch in .form-actions) */
 
 /* Reset Button */
 .reset-btn {
@@ -699,19 +738,33 @@ body {
   display: block;
 }
 
-.map-tooltip {
-  text-align: center;
-  padding: 0.75rem;
-  font-size: 1rem;
-  color: var(--color-navy);
-  font-weight: 500;
+.map-state-info {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2rem;
+  padding: 0.4rem 0.75rem;
   min-height: 2.5rem;
 }
 
-.map-tooltip .unavailable-text {
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-  font-weight: 400;
+.map-state-card {
+  text-align: center;
+  color: var(--color-navy);
+  font-size: 1rem;
+  font-weight: 500;
+  transition: opacity var(--transition);
+}
+
+.map-state-card.dimmed {
+  opacity: 0.45;
+}
+
+.map-state-card .benefit-amount {
+  font-size: 1rem;
+}
+
+.map-state-card.hovered {
+  opacity: 1;
 }
 
 .map-legend {
@@ -792,8 +845,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-top: 1.25rem;
-  padding: 0.75rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
 }
 
 .heatmap-legend .legend-label {
@@ -1741,4 +1794,26 @@ body {
     flex-direction: row;
     gap: 0.75rem;
   }
+}
+
+/* Footer */
+.app-footer {
+  max-width: 900px;
+  margin: 2rem auto 1rem;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  border-top: 1px solid var(--color-border);
+}
+
+.app-footer a {
+  color: var(--color-teal);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
 }

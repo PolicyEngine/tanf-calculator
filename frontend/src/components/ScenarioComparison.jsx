@@ -118,19 +118,19 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
       {/* Adults toggle + Sliders */}
       <p className="scenario-hint">Adjust the values below to explore different scenarios</p>
       <div className={`scenario-toggle-row ${scenarioB.num_adults !== defaultInputs.num_adults ? 'changed' : ''}`}>
-        <span className="scenario-slider-label">Adults</span>
+        <span className="scenario-slider-label">Household</span>
         <div className="scenario-toggle">
           <button
             className={`toggle-btn ${scenarioB.num_adults === 1 ? 'active' : ''}`}
             onClick={() => handleSlider('num_adults', 1)}
           >
-            1 (Single parent)
+            Single parent
           </button>
           <button
             className={`toggle-btn ${scenarioB.num_adults === 2 ? 'active' : ''}`}
             onClick={() => handleSlider('num_adults', 2)}
           >
-            2 (Two-parent)
+            Married
           </button>
         </div>
       </div>

@@ -12,7 +12,7 @@ import {
 const DEFAULT_COUNT = 7
 
 function StateRanking({ data, selectedState, onStateSelect, maxBenefit }) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
 
   const allEligible = useMemo(() => {
     if (!data) return []
