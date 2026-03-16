@@ -2,43 +2,36 @@
 
 A web application that estimates [Temporary Assistance for Needy Families (TANF)](https://www.acf.hhs.gov/ofa/programs/tanf) benefit eligibility and amounts for households across all 50 US states and DC. Powered by [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us).
 
+**Live app:** [policyengine.github.io/tanf-calculator](https://policyengine.github.io/tanf-calculator/)
+
 ## Features
 
-- **Benefit estimation** for any US state, with support for county-level variations (e.g., California regions)
-- **Eligibility diagnostics** showing which tests (demographic, economic, resource) pass or fail
-- **Income sensitivity charts** visualizing how benefits change as income increases
-- **Multi-program comparison** showing TANF alongside SNAP, EITC, and CTC
+- **Benefit estimation** for any US state, with support for county-level variations (CA, PA, VA)
+- **Income & Benefits chart** visualizing how TANF benefits change as income increases
 - **Interactive state map** with heatmap view of benefits across states
 - **State ranking** comparing benefit amounts across all states
 - **Scenario comparison** for side-by-side "what-if" analysis
 - **Poverty context** showing household income relative to the Federal Poverty Level
 
-## Tech Stack
+## Architecture
+
+The app is fully static — all TANF benefits are precomputed into JSON files, so no backend server is needed.
 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React 18, Vite 5, Recharts, react-simple-maps |
-| Backend | FastAPI, Uvicorn, Pydantic |
-| Calculation Engine | [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us) |
+| Data generation | Python, [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us) |
+| Hosting | GitHub Pages (via `docs/` folder) |
+
+**Current data version:** policyengine-us `1.511.1`
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.10+
 - Node.js 18+
 
-### Backend
-
-```bash
-cd backend
-pip install -r requirements.txt
-python app.py
-```
-
-The API server starts at `http://localhost:8000`.
-
-### Frontend
+### Run locally
 
 ```bash
 cd frontend
@@ -46,20 +39,28 @@ npm install
 npm run dev
 ```
 
-The dev server starts at `http://localhost:3000` and proxies API requests to the backend.
+The dev server starts at `http://localhost:3000/tanf-calculator/`.
 
-## API Endpoints
+### Regenerate data
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Health check |
-| `/states` | GET | List supported states |
-| `/counties/{state}` | GET | Get counties for a state |
-| `/calculate` | POST | Calculate TANF for a household |
-| `/calculate-range` | POST | Calculate TANF over an income range |
-| `/calculate-all-states` | POST | Compare benefits across all states |
-| `/calculate-combined-range` | POST | Calculate TANF + SNAP + EITC + CTC over income range |
-| `/calculate-comparison` | POST | Compare two household scenarios |
+Requires Python 3.10+ and policyengine-us:
+
+```bash
+cd scripts
+pip install -r requirements.txt
+python precompute.py           # Generate all state JSON files
+python precompute.py --states CA,NY  # Generate specific states only
+python precompute.py --metadata-only # Regenerate metadata.json only
+```
+
+Then rebuild the frontend:
+
+```bash
+cd frontend
+npm run build
+```
+
+The built files go to `docs/` for GitHub Pages deployment.
 
 ## License
 
