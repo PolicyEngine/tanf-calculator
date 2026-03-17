@@ -78,7 +78,7 @@ function TotalResourcesChart({ data, currentIncome, fpgMonthly }) {
           <YAxis
             domain={yDomain}
             tickFormatter={(v) => `$${v.toLocaleString()}`}
-            label={{ value: 'Total Monthly Resources ($)', angle: -90, position: 'insideLeft', dx: -5, style: { textAnchor: 'middle', fill: '#6b7280', fontSize: 11 } }}
+            label={{ value: 'Income + TANF ($/mo)', angle: -90, position: 'insideLeft', dx: -5, style: { textAnchor: 'middle', fill: '#6b7280', fontSize: 11 } }}
             tick={{ fill: '#6b7280', fontSize: 11 }}
             axisLine={{ stroke: '#e5e2dd' }}
             tickLine={{ stroke: '#e5e2dd' }}

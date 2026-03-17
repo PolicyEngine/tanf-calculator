@@ -273,7 +273,7 @@ function App() {
           <div className="tab-content">
             {activeTab === 'Income & Benefits' && chartData && (
               <div>
-                <p className="chart-subtitle">Shows how your total monthly resources change as income rises</p>
+                <p className="chart-subtitle">Your income plus TANF benefit compared to the Federal Poverty Level</p>
                 <TotalResourcesChart
                   data={chartData.data}
                   currentIncome={(result.household.earned_income + result.household.unearned_income) / 12}
@@ -282,7 +282,7 @@ function App() {
                 <div className="total-resources-legend">
                   <div className="legend-chip">
                     <span className="legend-dot" style={{ background: '#1E293B' }} />
-                    <span>Earned Income</span>
+                    <span>Income</span>
                   </div>
                   <div className="legend-chip">
                     <span className="legend-dot" style={{ background: '#319795' }} />
