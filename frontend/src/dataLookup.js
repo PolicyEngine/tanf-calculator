@@ -182,7 +182,6 @@ export async function calculateAllStates(numAdults, numChildren, enrolled, earne
  */
 export function calculateFPG(numAdults, numChildren, stateCode) {
   if (!metadata) return null
-
   const familySize = numAdults + numChildren
   const fpgData = stateCode === 'AK' ? metadata.fpg.AK
     : stateCode === 'HI' ? metadata.fpg.HI

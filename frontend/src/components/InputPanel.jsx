@@ -58,7 +58,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
     const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) || 0 : value),
+      [name]: type === 'checkbox' ? checked : (['num_adults', 'num_children'].includes(name) || type === 'number' ? parseFloat(value) || 0 : value),
     }))
     if (onInputChange) onInputChange()
   }
@@ -211,22 +211,20 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
 
         {/* Action row: buttons */}
         <div className="form-actions">
-          <div className="form-buttons">
-            <button
-              type="button"
-              className="reset-btn"
-              onClick={handleReset}
-            >
-              Reset
-            </button>
-            <button
-              type="submit"
-              className="calculate-btn"
-              disabled={loading}
-            >
-              {loading ? 'Calculating...' : 'Calculate benefits'}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="reset-btn"
+            onClick={handleReset}
+          >
+            Reset
+          </button>
+          <button
+            type="submit"
+            className="calculate-btn"
+            disabled={loading}
+          >
+            {loading ? 'Calculating...' : 'Calculate benefits'}
+          </button>
         </div>
       </form>
     </section>

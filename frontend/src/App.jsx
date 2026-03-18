@@ -3,7 +3,6 @@ import StateMap from './components/StateMap'
 import InputPanel from './components/InputPanel'
 import ResultsPanel from './components/ResultsPanel'
 import StateRanking from './components/StateRanking'
-import TotalResourcesChart from './components/TotalResourcesChart'
 import ScenarioComparison from './components/ScenarioComparison'
 import {
   loadMetadata,
@@ -29,7 +28,7 @@ function App() {
   const [comparisonData, setComparisonData] = useState(null)
   const [maxBenefit, setMaxBenefit] = useState(0)
   const [lastInputs, setLastInputs] = useState(null)
-  const [activeTab, setActiveTab] = useState('Income & benefits')
+  const [activeTab, setActiveTab] = useState('State comparison')
   const [metadata, setMetadata] = useState(null)
   const resultsRef = useRef(null)
 
@@ -107,7 +106,7 @@ function App() {
     setComparisonData(null)
     setMaxBenefit(0)
     setError(null)
-    setActiveTab('Income & benefits')
+    setActiveTab('State comparison')
   }
 
   const handleInputChange = () => {
@@ -123,7 +122,7 @@ function App() {
     setLoading(true)
     setError(null)
     setLastInputs(inputs)
-    setActiveTab('Income & benefits')
+    setActiveTab('State comparison')
 
     try {
       // Determine which data file to load
@@ -255,7 +254,7 @@ function App() {
       {result && (
         <section className="tabbed-section">
           <div className="tab-bar">
-            {['Income & benefits', 'State comparison', 'Scenario comparison'].map(tab => (
+            {['State comparison', 'Scenario comparison'].map(tab => (
               <button
                 key={tab}
                 className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
@@ -266,33 +265,6 @@ function App() {
             ))}
           </div>
           <div className="tab-content">
-            {activeTab === 'Income & benefits' && chartData && (
-              <div>
-                <p className="chart-subtitle">Your income plus TANF benefit compared to the federal poverty level</p>
-                <p className="chart-disclaimer">This chart reflects TANF only. Other programs (SNAP, EITC, Medicaid) and taxes are not included.</p>
-                <TotalResourcesChart
-                  data={chartData.data}
-                  currentIncome={(result.household.earned_income + result.household.unearned_income) / 12}
-                  fpgMonthly={result.poverty_context?.fpg_monthly}
-                />
-                <div className="total-resources-legend">
-                  <div className="legend-chip">
-                    <span className="legend-dot" style={{ background: '#1E293B' }} />
-                    <span>Income</span>
-                  </div>
-                  <div className="legend-chip">
-                    <span className="legend-dot" style={{ background: '#319795' }} />
-                    <span>TANF benefit</span>
-                  </div>
-                  {result.poverty_context?.fpg_monthly && (
-                    <div className="legend-chip">
-                      <span className="legend-dot" style={{ background: '#EF4444', width: 16, height: 2, borderRadius: 0 }} />
-                      <span>Federal poverty level</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
             {activeTab === 'State comparison' && comparisonData && (
               <StateRanking
                 data={comparisonData}
@@ -312,7 +284,7 @@ function App() {
                 countyRequired={countyRequired}
                 metadata={metadata}
                 states={states}
-                onClose={() => setActiveTab('Income & benefits')}
+                onClose={() => setActiveTab('State comparison')}
               />
             )}
           </div>

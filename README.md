@@ -22,7 +22,7 @@ The app is fully static — all TANF benefits are precomputed into JSON files, s
 | Data generation | Python, [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us) |
 | Hosting | GitHub Pages (via `docs/` folder) |
 
-**Current data version:** policyengine-us `1.511.1`
+**Current data version:** policyengine-us `1.598.0`
 
 ### Precomputed data grid
 
