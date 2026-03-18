@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   BarChart,
   Bar,
@@ -8,11 +9,20 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts'
+import { niceTicks } from '../utils/niceTicks'
+
+const fmt = (v) => v.toLocaleString('en-US', {
+  style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+})
 
 function HouseholdSizeChart({ data, currentChildren }) {
-  const formatCurrency = (value) => `$${value.toLocaleString()}`
+  const yTicks = useMemo(() => {
+    if (!data || data.length === 0) return [0]
+    const yMax = Math.max(...data.map(d => d.tanf_monthly))
+    return niceTicks(yMax)
+  }, [data])
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload
       return (
@@ -28,7 +38,7 @@ function HouseholdSizeChart({ data, currentChildren }) {
             {item.children} {item.children === 1 ? 'child' : 'children'}
           </p>
           <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#4FD1C5' }}>
-            {formatCurrency(item.tanf_monthly)}/mo
+            {fmt(item.tanf_monthly)}/mo
           </p>
           {item.children === currentChildren && (
             <p style={{ fontSize: '0.75rem', marginTop: '8px', opacity: 0.7, fontStyle: 'italic' }}>
@@ -57,12 +67,14 @@ function HouseholdSizeChart({ data, currentChildren }) {
             tickLine={{ stroke: '#e5e2dd' }}
           />
           <YAxis
-            tickFormatter={(v) => `$${v.toLocaleString()}`}
+            domain={[0, yTicks[yTicks.length - 1]]}
+            ticks={yTicks}
+            tickFormatter={fmt}
             tick={{ fill: '#6b7280', fontSize: 12 }}
             axisLine={{ stroke: '#e5e2dd' }}
             tickLine={{ stroke: '#e5e2dd' }}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(13, 148, 136, 0.08)' }} />
+          <Tooltip content={<CustomTooltip />} separator=": " cursor={{ fill: 'rgba(13, 148, 136, 0.08)' }} />
           <Bar dataKey="tanf_monthly" radius={[4, 4, 0, 0]}>
             {data.map((entry, index) => (
               <Cell

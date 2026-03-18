@@ -9,19 +9,18 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts'
+import { niceTicks } from '../utils/niceTicks'
+
+const fmt = (v) => v.toLocaleString('en-US', {
+  style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+})
 
 function BenefitChart({ data }) {
-  const formatCurrency = (value) => `$${value.toLocaleString()}`
-
-  // Compute clean Y-axis domain based on max benefit
-  const yDomain = useMemo(() => {
-    if (!data || data.length === 0) return [0, 500]
-    const maxVal = Math.max(...data.map(d => d.tanf_monthly))
-    // Round up to nearest nice increment
-    const niceSteps = [100, 200, 250, 500, 1000, 1500, 2000, 2500, 3000]
-    const target = maxVal * 1.1
-    const nice = niceSteps.find(s => s >= target) || Math.ceil(target / 500) * 500
-    return [0, nice]
+  const { xTicks, yTicks } = useMemo(() => {
+    if (!data || data.length === 0) return { xTicks: [0], yTicks: [0] }
+    const xMax = Math.max(...data.map(d => d.total_income_monthly))
+    const yMax = Math.max(...data.map(d => d.tanf_monthly))
+    return { xTicks: niceTicks(xMax), yTicks: niceTicks(yMax) }
   }, [data])
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -35,11 +34,11 @@ function BenefitChart({ data }) {
           color: 'white',
           fontFamily: "'Inter', sans-serif",
         }}>
-          <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.7, marginBottom: '4px' }}>
-            Income: {formatCurrency(label)}/mo
+          <p style={{ fontSize: '0.75rem', letterSpacing: '0.05em', opacity: 0.7, marginBottom: '4px' }}>
+            Income: {fmt(label)}/mo
           </p>
           <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#4FD1C5' }}>
-            TANF: {formatCurrency(payload[0].value)}/mo
+            TANF: {fmt(payload[0].value)}/mo
           </p>
         </div>
       )
@@ -58,24 +57,24 @@ function BenefitChart({ data }) {
           <XAxis
             dataKey="total_income_monthly"
             type="number"
-            domain={[0, 'dataMax']}
-            tickFormatter={(v) => `$${v.toLocaleString()}`}
+            domain={[0, xTicks[xTicks.length - 1]]}
+            ticks={xTicks}
+            tickFormatter={fmt}
             label={{ value: 'Monthly household income', position: 'bottom', offset: -5, fill: '#6b7280', fontSize: 11 }}
             tick={{ fill: '#6b7280', fontSize: 11 }}
             axisLine={{ stroke: '#e5e2dd' }}
             tickLine={{ stroke: '#e5e2dd' }}
           />
           <YAxis
-            type="number"
-            domain={yDomain}
-            allowDecimals={false}
-            tickFormatter={(v) => `$${v.toLocaleString()}`}
-            label={{ value: 'Monthly TANF benefit ($)', angle: -90, position: 'insideLeft', dx: -5, style: { textAnchor: 'middle', fill: '#6b7280', fontSize: 11 } }}
+            domain={[0, yTicks[yTicks.length - 1]]}
+            ticks={yTicks}
+            tickFormatter={fmt}
+            label={{ value: 'Monthly TANF benefit', angle: -90, position: 'insideLeft', dx: -5, style: { textAnchor: 'middle', fill: '#6b7280', fontSize: 11 } }}
             tick={{ fill: '#6b7280', fontSize: 11 }}
             axisLine={{ stroke: '#e5e2dd' }}
             tickLine={{ stroke: '#e5e2dd' }}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip />} separator=": " />
           <ReferenceLine y={0} stroke="#e5e2dd" />
           <Line
             type="stepAfter"
