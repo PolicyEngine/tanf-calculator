@@ -7,11 +7,10 @@ A web application that estimates [Temporary Assistance for Needy Families (TANF)
 ## Features
 
 - **Benefit estimation** for any US state, with support for county-level variations (CA, PA, VA)
-- **Income & Benefits chart** visualizing how TANF benefits change as income increases
+- **Income & benefits chart** comparing income + TANF to the federal poverty level
 - **Interactive state map** with heatmap view of benefits across states
 - **State ranking** comparing benefit amounts across all states
 - **Scenario comparison** for side-by-side "what-if" analysis
-- **Poverty context** showing household income relative to the Federal Poverty Level
 
 ## Architecture
 
@@ -24,6 +23,17 @@ The app is fully static — all TANF benefits are precomputed into JSON files, s
 | Hosting | GitHub Pages (via `docs/` folder) |
 
 **Current data version:** policyengine-us `1.511.1`
+
+### Precomputed data grid
+
+| Dimension | Range | Step |
+|-----------|-------|------|
+| Earned income | $0–$3,000/mo | $100 |
+| Unearned income | $0–$3,000/mo | $100 |
+| Adults | 1–2 | — |
+| Children | 0–7 | — |
+
+This produces 15,376 simulations per state (~23 minutes each).
 
 ## Getting Started
 

@@ -11,6 +11,12 @@ import {
 
 const DEFAULT_COUNT = 7
 
+const getOrdinal = (n) => {
+  const s = ['th', 'st', 'nd', 'rd']
+  const v = n % 100
+  return n + (s[(v - 20) % 10] || s[v] || s[0])
+}
+
 function StateRanking({ data, selectedState, onStateSelect, maxBenefit }) {
   const [expanded, setExpanded] = useState(true)
 
@@ -72,9 +78,9 @@ function StateRanking({ data, selectedState, onStateSelect, maxBenefit }) {
         <div className="selected-state-rank">
           <span className="rank-badge">#{selectedStateData.rank}</span>
           <span className="rank-text">
-            <strong>{selectedStateData.state_name}</strong> ranks #{selectedStateData.rank} of {allEligible.length} states
+            <strong>{selectedStateData.state_name}</strong> provides the {getOrdinal(selectedStateData.rank)} most generous benefits across states for your household
             {selectedStateData.tanf_monthly > 0 && (
-              <> with <strong>{formatCurrency(selectedStateData.tanf_monthly)}/mo</strong></>
+              <> (<strong>{formatCurrency(selectedStateData.tanf_monthly)}/mo</strong>)</>
             )}
           </span>
         </div>

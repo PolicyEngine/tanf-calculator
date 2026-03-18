@@ -127,6 +127,28 @@ def create_situation(
         # Assign earned income to first adult
         if i == 0 and earned_income > 0:
             people[adult_id]["employment_income"] = {year: earned_income}
+            monthly_earned = earned_income / 12
+            # Generic TANF earned income (monthly, all 12 months)
+            people[adult_id]["tanf_gross_earned_income"] = {
+                f"{year}-{m:02d}": monthly_earned for m in range(1, 13)
+            }
+            # State-specific earned income variables
+            STATE_EARNED_INCOME_VARS = {
+                # Person-level, monthly
+                "DC": ("person", "dc_tanf_gross_earned_income", "month"),
+                "IL": ("person", "il_tanf_gross_earned_income", "month"),
+                "MT": ("person", "mt_tanf_gross_earned_income_person", "month"),
+                "SC": ("person", "sc_tanf_gross_earned_income", "month"),
+                "TX": ("person", "tx_tanf_gross_earned_income", "month"),
+                # SPM-unit-level, year
+                "CO": ("spm_unit", "co_tanf_countable_gross_earned_income", "year"),
+            }
+            if state in STATE_EARNED_INCOME_VARS:
+                entity, var_name, period = STATE_EARNED_INCOME_VARS[state]
+                if entity == "person":
+                    people[adult_id][var_name] = {
+                        f"{year}-{m:02d}": monthly_earned for m in range(1, 13)
+                    }
 
     # Add children
     for i, age in enumerate(child_ages):
@@ -184,12 +206,12 @@ def create_situation(
     if unearned_income > 0:
         monthly_unearned = unearned_income / 12
 
-        # Generic TANF unearned income (works for most states)
+        # Generic TANF unearned income (monthly, all 12 months)
         situation["people"]["adult_1"]["tanf_gross_unearned_income"] = {
-            f"{year}-01": monthly_unearned
+            f"{year}-{m:02d}": monthly_unearned for m in range(1, 13)
         }
 
-        # State-specific unearned income variables for states that use their own
+        # State-specific unearned income variables
         STATE_UNEARNED_INCOME_VARS = {
             # Person-level, monthly
             "DC": ("person", "dc_tanf_gross_unearned_income", "month"),
@@ -199,13 +221,15 @@ def create_situation(
             "TX": ("person", "tx_tanf_gross_unearned_income", "month"),
             # SPM-unit-level, year
             "CA": ("spm_unit", "ca_tanf_other_unearned_income", "year"),
+            "CO": ("spm_unit", "co_tanf_countable_gross_unearned_income", "year"),
+            "NC": ("spm_unit", "nc_tanf_countable_gross_unearned_income", "year"),
         }
 
         if state in STATE_UNEARNED_INCOME_VARS:
             entity, var_name, period = STATE_UNEARNED_INCOME_VARS[state]
             if entity == "person":
                 situation["people"]["adult_1"][var_name] = {
-                    f"{year}-01": monthly_unearned
+                    f"{year}-{m:02d}": monthly_unearned for m in range(1, 13)
                 }
             elif entity == "spm_unit":
                 if period == "year":
@@ -214,8 +238,14 @@ def create_situation(
                     }
                 else:
                     situation["spm_units"]["spm_unit"][var_name] = {
-                        f"{year}-01": monthly_unearned
+                        f"{year}-{m:02d}": monthly_unearned for m in range(1, 13)
                     }
+
+    # Add SPM-unit-level earned income variables (must be after situation is built)
+    if earned_income > 0 and state == "CO":
+        situation["spm_units"]["spm_unit"]["co_tanf_countable_gross_earned_income"] = {
+            year: earned_income
+        }
 
     # Add resources if specified (for resource eligibility tests)
     if resources > 0:

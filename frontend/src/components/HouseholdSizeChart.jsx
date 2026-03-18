@@ -24,8 +24,8 @@ function HouseholdSizeChart({ data, currentChildren }) {
           color: 'white',
           fontFamily: "'Inter', sans-serif",
         }}>
-          <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.7, marginBottom: '4px' }}>
-            {item.label}
+          <p style={{ fontSize: '0.75rem', letterSpacing: '0.05em', opacity: 0.7, marginBottom: '4px' }}>
+            {item.children} {item.children === 1 ? 'child' : 'children'}
           </p>
           <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#4FD1C5' }}>
             {formatCurrency(item.tanf_monthly)}/mo
@@ -51,7 +51,7 @@ function HouseholdSizeChart({ data, currentChildren }) {
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e2dd" vertical={false} />
           <XAxis
             dataKey="children"
-            label={{ value: 'Number of Children', position: 'bottom', offset: -5, fill: '#6b7280', fontSize: 12 }}
+            label={{ value: 'Number of children', position: 'bottom', offset: -5, fill: '#6b7280', fontSize: 12 }}
             tick={{ fill: '#6b7280', fontSize: 12 }}
             axisLine={{ stroke: '#e5e2dd' }}
             tickLine={{ stroke: '#e5e2dd' }}

@@ -68,15 +68,18 @@ function TotalResourcesChart({ data, currentIncome, fpgMonthly }) {
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e2dd" />
           <XAxis
             dataKey="total_income_monthly"
+            type="number"
+            domain={[0, 'dataMax']}
             tickFormatter={(v) => `$${v.toLocaleString()}`}
-            label={{ value: 'Monthly Household Income', position: 'bottom', offset: -5, fill: '#6b7280', fontSize: 12 }}
+            label={{ value: 'Monthly household income', position: 'bottom', offset: -5, fill: '#6b7280', fontSize: 12 }}
             tick={{ fill: '#6b7280', fontSize: 12 }}
             axisLine={{ stroke: '#e5e2dd' }}
             tickLine={{ stroke: '#e5e2dd' }}
-            interval={Math.max(0, Math.ceil((data?.length || 1) / 10) - 1)}
           />
           <YAxis
+            type="number"
             domain={yDomain}
+            allowDecimals={false}
             tickFormatter={(v) => `$${v.toLocaleString()}`}
             label={{ value: 'Income + TANF ($/mo)', angle: -90, position: 'insideLeft', dx: -5, style: { textAnchor: 'middle', fill: '#6b7280', fontSize: 11 } }}
             tick={{ fill: '#6b7280', fontSize: 11 }}

@@ -29,7 +29,7 @@ function App() {
   const [comparisonData, setComparisonData] = useState(null)
   const [maxBenefit, setMaxBenefit] = useState(0)
   const [lastInputs, setLastInputs] = useState(null)
-  const [activeTab, setActiveTab] = useState('Income & Benefits')
+  const [activeTab, setActiveTab] = useState('Income & benefits')
   const [metadata, setMetadata] = useState(null)
   const resultsRef = useRef(null)
 
@@ -107,7 +107,7 @@ function App() {
     setComparisonData(null)
     setMaxBenefit(0)
     setError(null)
-    setActiveTab('Income & Benefits')
+    setActiveTab('Income & benefits')
   }
 
   const handleInputChange = () => {
@@ -123,7 +123,7 @@ function App() {
     setLoading(true)
     setError(null)
     setLastInputs(inputs)
-    setActiveTab('Income & Benefits')
+    setActiveTab('Income & benefits')
 
     try {
       // Determine which data file to load
@@ -207,13 +207,8 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div className="header-brand">
-          <img src={`${import.meta.env.BASE_URL}policyengine-logo.png`} alt="PolicyEngine" className="header-logo" />
-          <div>
-            <h1>TANF Calculator</h1>
-            <p>Estimate your TANF benefits</p>
-          </div>
-        </div>
+        <h1>TANF Calculator</h1>
+        <p>Estimate your TANF benefits</p>
       </header>
 
       <div className="top-layout">
@@ -230,7 +225,7 @@ function App() {
         />
 
         <section className="map-section">
-          <h2>{comparisonData ? 'Benefit Comparison by State' : 'Select Your State'}</h2>
+          <h2>{comparisonData ? 'Benefit comparison by state' : 'Select your state'}</h2>
           {comparisonLoading && (
             <div className="loading">Loading state comparison...</div>
           )}
@@ -260,7 +255,7 @@ function App() {
       {result && (
         <section className="tabbed-section">
           <div className="tab-bar">
-            {['Income & Benefits', 'State Comparison', 'Scenario Comparison'].map(tab => (
+            {['Income & benefits', 'State comparison', 'Scenario comparison'].map(tab => (
               <button
                 key={tab}
                 className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
@@ -271,9 +266,10 @@ function App() {
             ))}
           </div>
           <div className="tab-content">
-            {activeTab === 'Income & Benefits' && chartData && (
+            {activeTab === 'Income & benefits' && chartData && (
               <div>
-                <p className="chart-subtitle">Your income plus TANF benefit compared to the Federal Poverty Level</p>
+                <p className="chart-subtitle">Your income plus TANF benefit compared to the federal poverty level</p>
+                <p className="chart-disclaimer">This chart reflects TANF only. Other programs (SNAP, EITC, Medicaid) and taxes are not included.</p>
                 <TotalResourcesChart
                   data={chartData.data}
                   currentIncome={(result.household.earned_income + result.household.unearned_income) / 12}
@@ -286,18 +282,18 @@ function App() {
                   </div>
                   <div className="legend-chip">
                     <span className="legend-dot" style={{ background: '#319795' }} />
-                    <span>TANF Benefit</span>
+                    <span>TANF benefit</span>
                   </div>
                   {result.poverty_context?.fpg_monthly && (
                     <div className="legend-chip">
                       <span className="legend-dot" style={{ background: '#EF4444', width: 16, height: 2, borderRadius: 0 }} />
-                      <span>Federal Poverty Level</span>
+                      <span>Federal poverty level</span>
                     </div>
                   )}
                 </div>
               </div>
             )}
-            {activeTab === 'State Comparison' && comparisonData && (
+            {activeTab === 'State comparison' && comparisonData && (
               <StateRanking
                 data={comparisonData}
                 selectedState={selectedState}
@@ -305,10 +301,10 @@ function App() {
                 maxBenefit={maxBenefit}
               />
             )}
-            {activeTab === 'State Comparison' && !comparisonData && comparisonLoading && (
+            {activeTab === 'State comparison' && !comparisonData && comparisonLoading && (
               <div className="loading">Loading state comparison...</div>
             )}
-            {activeTab === 'Scenario Comparison' && lastInputs && (
+            {activeTab === 'Scenario comparison' && lastInputs && (
               <ScenarioComparison
                 defaultInputs={lastInputs}
                 selectedState={selectedState}
@@ -316,7 +312,7 @@ function App() {
                 countyRequired={countyRequired}
                 metadata={metadata}
                 states={states}
-                onClose={() => setActiveTab('Income & Benefits')}
+                onClose={() => setActiveTab('Income & benefits')}
               />
             )}
           </div>

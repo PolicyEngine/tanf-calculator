@@ -97,7 +97,7 @@ function ResultsPanel({ result, chartData, householdSizeData, comparisonData, lo
           </div>
           {cutoffIncome && (
             <div className="stat-item">
-              <span className="stat-label">Eligibility cutoff</span>
+              <span className="stat-label">Income limit</span>
               <span className="stat-value">{formatCurrency(cutoffIncome)}/mo</span>
             </div>
           )}
@@ -122,7 +122,7 @@ function ResultsPanel({ result, chartData, householdSizeData, comparisonData, lo
             <BenefitChart data={chartData.data} />
           </div>
           <div className="chart-container">
-            <h3>Benefit by Household Size</h3>
+            <h3>Benefit by number of children</h3>
             <HouseholdSizeChart
               data={householdSizeData}
               currentChildren={result.household.num_children}

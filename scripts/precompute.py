@@ -18,11 +18,11 @@ from config import PILOT_STATES, CA_COUNTIES, PA_COUNTIES, VA_COUNTIES
 
 # Grid configuration
 YEAR = 2025
-EARNED_STEPS = list(range(0, 5001, 200))  # $0-$5000/mo in $200 steps (26 values)
-UNEARNED_STEPS = list(range(0, 2001, 200))  # $0-$2000/mo in $200 steps (11 values)
+EARNED_STEPS = list(range(0, 3001, 100))  # $0-$3000/mo in $100 steps (31 values)
+UNEARNED_STEPS = list(range(0, 3001, 100))  # $0-$3000/mo in $100 steps (31 values)
 ADULTS_RANGE = [1, 2]
-CHILDREN_RANGE = list(range(0, 11))  # 0-10
-ENROLLED_VALUES = [False, True]
+CHILDREN_RANGE = list(range(0, 8))  # 0-7
+ENROLLED_VALUES = [False]
 
 # Representative counties per region/group for precomputation
 CA_REGION_COUNTIES = {

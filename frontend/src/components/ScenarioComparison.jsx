@@ -74,23 +74,23 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
     {
       name: 'num_children',
       label: 'Children',
-      min: 0, max: 10, step: 1,
+      min: 0, max: 7, step: 1,
       value: scenarioB.num_children,
       originalValue: defaultInputs.num_children,
       format: v => String(v),
     },
     {
       name: 'earned_income',
-      label: 'Earned Income',
-      min: 0, max: 5000, step: 100,
+      label: 'Earned income',
+      min: 0, max: 3000, step: 100,
       value: scenarioB.earned_income,
       originalValue: earnedA,
       format: v => `${formatCurrency(v)}/mo`,
     },
     {
       name: 'unearned_income',
-      label: 'Unearned Income',
-      min: 0, max: 2000, step: 100,
+      label: 'Unearned income',
+      min: 0, max: 3000, step: 100,
       value: scenarioB.unearned_income,
       originalValue: unearnedA,
       format: v => `${formatCurrency(v)}/mo`,
@@ -182,7 +182,7 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
             </div>
 
             <div className="scenario-result-side">
-              <span className="scenario-result-tag">What If</span>
+              <span className="scenario-result-tag">What if</span>
               <span className={`scenario-result-val ${benefitB.eligible ? '' : 'not-eligible'}`}>
                 {formatCurrency(benefitB.tanf_monthly)}/mo
               </span>
@@ -207,7 +207,7 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
             unearned_income: unearnedA,
           })}
         >
-          Reset to Current
+          Reset to current
         </button>
       )}
     </section>

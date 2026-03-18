@@ -107,7 +107,7 @@ export function getMaxBenefit(stateData, numAdults, numChildren, enrolled) {
  * Generate chart data: TANF benefit over an income range.
  * Sweeps total income from $0 to $maxIncome, maintaining the earned/unearned ratio.
  */
-export function generateChartData(stateData, numAdults, numChildren, enrolled, earnedMonthly, unearnedMonthly, maxIncome = 5000, step = 50) {
+export function generateChartData(stateData, numAdults, numChildren, enrolled, earnedMonthly, unearnedMonthly, maxIncome = 3000, step = 50) {
   const totalIncome = earnedMonthly + unearnedMonthly
   const earnedRatio = totalIncome > 0 ? earnedMonthly / totalIncome : 1.0
 
@@ -245,15 +245,17 @@ export function buildResult(stateData, stateCode, stateName, numAdults, numChild
 
 /**
  * Generate household size comparison data.
- * For a given state/income/enrolled, shows benefit across 0-10 children.
+ * For a given state/income/enrolled, shows benefit across 0-7 children.
  */
 export function generateHouseholdSizeData(stateData, numAdults, enrolled, earnedMonthly, unearnedMonthly) {
   const data = []
-  for (let children = 0; children <= 10; children++) {
+  for (let children = 0; children <= 7; children++) {
+    const householdSize = numAdults + children
     const { tanf_monthly } = lookupBenefit(stateData, numAdults, children, enrolled, earnedMonthly, unearnedMonthly)
     data.push({
       children,
-      label: `${numAdults}A + ${children}C`,
+      householdSize,
+      label: String(householdSize),
       tanf_monthly,
     })
   }

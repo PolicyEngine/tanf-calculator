@@ -107,7 +107,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
 
   return (
     <section className="input-panel">
-      <h2>Household Information</h2>
+      <h2>Household information</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-grid">
           {/* Row 1: State + County (county always occupies space) */}
@@ -166,7 +166,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
               id="num_children"
               name="num_children"
               min="0"
-              max="10"
+              max="7"
               value={formData.num_children}
               onChange={handleChange}
             />
@@ -175,7 +175,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
           {/* Row 3: Income */}
           <div className="form-group">
             <label htmlFor="earned_income">
-              Earned Income ($/month)
+              Earned income ($/month)
               <InfoTooltip text="Income from wages, salaries, tips, and self-employment. This is money you receive from working." />
             </label>
             <input
@@ -192,7 +192,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
 
           <div className="form-group">
             <label htmlFor="unearned_income">
-              Unearned Income ($/month)
+              Unearned income ($/month)
               <InfoTooltip text="Income not from employment, such as Social Security, child support, pensions, unemployment benefits, or rental income." />
             </label>
             <input
@@ -209,21 +209,8 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
 
         </div>
 
-        {/* Action row: toggle + buttons on one line */}
+        {/* Action row: buttons */}
         <div className="form-actions">
-          <label className="toggle-label">
-            <span className={`toggle-switch ${formData.is_tanf_enrolled ? 'active' : ''}`}>
-              <input
-                type="checkbox"
-                name="is_tanf_enrolled"
-                checked={formData.is_tanf_enrolled}
-                onChange={handleChange}
-              />
-              <span className="toggle-track" />
-            </span>
-            <span>Currently on TANF</span>
-          </label>
-
           <div className="form-buttons">
             <button
               type="button"
@@ -237,7 +224,7 @@ function InputPanel({ selectedState, states, counties, countyRequired, onCalcula
               className="calculate-btn"
               disabled={loading}
             >
-              {loading ? 'Calculating...' : 'Calculate Benefits'}
+              {loading ? 'Calculating...' : 'Calculate benefits'}
             </button>
           </div>
         </div>
