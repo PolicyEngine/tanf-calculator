@@ -3,8 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO Meta Tags -->
+    <title>TANF Calculator | Estimate Your TANF Benefits by State - PolicyEngine</title>
+    <meta name="description" content="Free TANF benefit calculator. Estimate your Temporary Assistance for Needy Families (TANF) cash benefits by state, household size, and income. Compare benefits across all 50 states." />
+    <meta name="keywords" content="TANF calculator, TANF benefits, Temporary Assistance for Needy Families, welfare calculator, cash assistance, state benefits, poverty assistance, PolicyEngine" />
+    <link rel="canonical" href="https://policyengine.github.io/tanf-calculator/" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#319795" />
+
+    <!-- Open Graph Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TANF Calculator | Estimate Your TANF Benefits by State" />
+    <meta property="og:description" content="Free TANF benefit calculator. Estimate your Temporary Assistance for Needy Families (TANF) cash benefits by state, household size, and income. Compare benefits across all 50 states." />
+    <meta property="og:url" content="https://policyengine.github.io/tanf-calculator/" />
+    <meta property="og:site_name" content="PolicyEngine" />
+    <meta property="og:image" content="https://policyengine.github.io/tanf-calculator/policyengine-logo.png" />
+    <meta property="og:image:alt" content="PolicyEngine TANF Calculator" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="TANF Calculator | Estimate Your TANF Benefits by State" />
+    <meta name="twitter:description" content="Free TANF benefit calculator. Estimate your TANF cash benefits by state, household size, and income. Compare benefits across all 50 states." />
+    <meta name="twitter:image" content="https://policyengine.github.io/tanf-calculator/policyengine-logo.png" />
+    <meta name="twitter:image:alt" content="PolicyEngine TANF Calculator" />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "TANF Calculator",
+      "description": "Estimate your Temporary Assistance for Needy Families (TANF) cash benefits by state, household size, and income.",
+      "url": "https://policyengine.github.io/tanf-calculator/",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "PolicyEngine",
+        "url": "https://policyengine.org"
+      }
+    }
+    </script>
+
+    <!-- Favicon -->
     <link rel="icon" href="policyengine-logo.png" />
-    <title>TANF Calculator</title>
+    <link rel="apple-touch-icon" href="policyengine-logo.png" />
+
+    <!-- Font Preconnect & Preload -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
+
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2YHG89FY0N"></script>
     <script>
@@ -58,6 +114,11 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>TANF Calculator</h1>
+      <p>This TANF (Temporary Assistance for Needy Families) calculator helps you estimate your cash assistance benefits by state, household size, and income. Please enable JavaScript to use the interactive calculator.</p>
+      <p>Visit <a href="https://policyengine.org">PolicyEngine.org</a> for more policy analysis tools.</p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

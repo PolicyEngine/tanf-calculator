@@ -153,6 +153,11 @@ function ScenarioComparison({ defaultInputs, selectedState, counties, countyRequ
                 value={s.value}
                 onChange={e => handleSlider(s.name, parseFloat(e.target.value))}
                 className="scenario-range"
+                aria-label={`Adjust ${s.label}`}
+                aria-valuemin={s.min}
+                aria-valuemax={s.max}
+                aria-valuenow={s.value}
+                aria-valuetext={s.format(s.value)}
               />
               <div className="scenario-slider-bounds">
                 <span>{s.format(s.min)}</span>
