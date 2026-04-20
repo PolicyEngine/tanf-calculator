@@ -207,9 +207,10 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>TANF Calculator</h1>
-        <p>Estimate your TANF benefits</p>
+        <p>Estimate your Temporary Assistance for Needy Families benefits</p>
       </header>
 
+      <main>
       <div className="top-layout">
         <InputPanel
           selectedState={selectedState}
@@ -290,6 +291,8 @@ function App() {
           </div>
         </section>
       )}
+
+      </main>
 
       <footer className="app-footer">
         <p>

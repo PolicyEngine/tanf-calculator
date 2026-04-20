@@ -158,7 +158,7 @@ function StateMap({ selectedState, availableStates, onStateSelect, comparisonDat
   }
 
   return (
-    <div className="state-map-container">
+    <div className="state-map-container" role="img" aria-label="Interactive United States map for selecting a state to calculate TANF benefits">
       <div className="map-wrapper">
         <ComposableMap
           projection="geoAlbersUsa"
