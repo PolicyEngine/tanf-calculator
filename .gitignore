@@ -15,7 +15,12 @@ node_modules/
 npm-debug.log*
 
 # Build output
-frontend/dist/
+.next/
+out/
+dist/
+next-env.d.ts
+*.tsbuildinfo
+.vercel
 
 # Environment
 .env
