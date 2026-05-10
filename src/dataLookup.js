@@ -5,7 +5,7 @@
 
 // Vercel deployment serves /public assets at the root, so /data resolves
 // to the precomputed state JSON files committed under public/data/.
-const DATA_BASE = '/data'
+const DATA_BASE = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/data`
 
 // Cache for loaded state data files
 const stateDataCache = {}
