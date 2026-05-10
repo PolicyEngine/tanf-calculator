@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
+import PolicyEngineHeader from '@/components/PolicyEngineHeader';
 import './globals.css';
 
 const SITE_URL = 'https://tanf-calculator.vercel.app';
@@ -155,6 +156,7 @@ export default function RootLayout({
             })();
           `}
         </Script>
+        <PolicyEngineHeader />
         {children}
         <noscript>
           <h1>TANF Calculator</h1>
