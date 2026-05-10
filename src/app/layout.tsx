@@ -11,6 +11,8 @@ const DESCRIPTION =
 const OG_IMAGE = `${SITE_URL}/policyengine-logo.png`;
 const GA_MEASUREMENT_ID = 'G-2YHG89FY0N';
 const TOOL_NAME = 'tanf-calculator';
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '';
+const LOGO_PATH = `${BASE_PATH}/policyengine-logo.png`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -29,8 +31,8 @@ export const metadata: Metadata = {
   alternates: { canonical: SITE_URL },
   robots: { index: true, follow: true },
   icons: {
-    icon: '/policyengine-logo.png',
-    apple: '/policyengine-logo.png',
+    icon: LOGO_PATH,
+    apple: LOGO_PATH,
   },
   openGraph: {
     type: 'website',
