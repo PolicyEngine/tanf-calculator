@@ -111,7 +111,6 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <PolicyEngineShell country="us">
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
@@ -161,7 +160,6 @@ export default function RootLayout({
             })();
           `}
         </Script>
-        {children}
         <noscript>
           <h1>TANF Calculator</h1>
           <p>
@@ -175,7 +173,7 @@ export default function RootLayout({
             more policy analysis tools.
           </p>
         </noscript>
-              </PolicyEngineShell>
+        <PolicyEngineShell country="us">{children}</PolicyEngineShell>
       </body>
     </html>
   );
