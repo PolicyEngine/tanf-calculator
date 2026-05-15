@@ -1,3 +1,6 @@
+import { PolicyEngineShell } from "@policyengine/ui-kit/layout";
+import "@policyengine/ui-kit/styles.css";
+
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
@@ -157,7 +160,6 @@ export default function RootLayout({
             })();
           `}
         </Script>
-        {children}
         <noscript>
           <h1>TANF Calculator</h1>
           <p>
@@ -171,6 +173,7 @@ export default function RootLayout({
             more policy analysis tools.
           </p>
         </noscript>
+        <PolicyEngineShell country="us">{children}</PolicyEngineShell>
       </body>
     </html>
   );
