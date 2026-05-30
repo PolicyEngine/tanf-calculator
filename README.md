@@ -22,7 +22,7 @@ The app is fully static — all TANF benefits are precomputed into JSON files, s
 | Data generation | Python, [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us) |
 | Hosting | GitHub Pages (via `docs/` folder) |
 
-**Current data version:** policyengine-us `1.598.0`
+**Current data version:** policyengine-us `1.715.3` + [Indiana TANF fix #8543](https://github.com/PolicyEngine/policyengine-us/pull/8543), tax year 2026 — ⚠️ **partial regeneration** (23 of 56 data files updated; remaining 33 still on `1.598.0`, pending follow-up)
 
 ### Precomputed data grid
 
