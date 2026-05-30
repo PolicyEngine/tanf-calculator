@@ -2,10 +2,10 @@
 """
 VECTORIZED TANF precompute — experimental fast path.
 
-Instead of building one Simulation per (earned, unearned) cell (15,376 builds
+Instead of building one Simulation per (earned, unearned) cell (60,016 builds
 per state), this builds ONE Simulation per household *structure*
-(num_adults x num_children = 16) and sweeps the 31x31 income grid with
-PolicyEngine `axes`. That's 16 Simulation builds per state instead of 15,376.
+(num_adults x num_children = 16) and sweeps the 121x31 income grid with
+PolicyEngine `axes`. That's 16 Simulation builds per state instead of 60,016.
 
 The income injection is made byte-for-byte equivalent to
 calculator.create_situation by:
@@ -40,10 +40,17 @@ from calculator import (
 from config import PILOT_STATES, CA_COUNTIES, PA_COUNTIES, VA_COUNTIES, VT_COUNTIES
 
 # --- Grid configuration (must match precompute.py) ---
+# Asymmetric resolution: the TANF benefit kinks (earned-income disregards /
+# phase-outs) fall on $25 boundaries on the EARNED axis, while the response to
+# UNEARNED income is ~linear. So we sample earned finely ($25) and unearned
+# coarsely ($100) — smooth charts at ~1/4 the data of a symmetric $25 grid.
 YEAR = 2026
-COUNT = 31  # 0..3000 step 100 -> 31 values
+EARNED_STEP = 25       # $/mo
+UNEARNED_STEP = 100    # $/mo
 EARNED_MAX_MONTHLY = 3000
 UNEARNED_MAX_MONTHLY = 3000
+EARNED_COUNT = EARNED_MAX_MONTHLY // EARNED_STEP + 1       # 121
+UNEARNED_COUNT = UNEARNED_MAX_MONTHLY // UNEARNED_STEP + 1  # 31
 ADULTS_RANGE = [1, 2]
 CHILDREN_RANGE = list(range(0, 8))
 
@@ -103,16 +110,17 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "data")
 def build_axes(state, year):
     """Build the two-group axes (earned dim, unearned dim) for `state`.
 
-    Group 0 = earned income dimension, Group 1 = unearned income dimension.
+    Group 0 = earned income dimension (EARNED_COUNT cells),
+    Group 1 = unearned income dimension (UNEARNED_COUNT cells).
     Parallel axes within a group vary in lockstep; the two groups form a
-    Cartesian product of COUNT x COUNT cells.
+    Cartesian product of EARNED_COUNT x UNEARNED_COUNT cells.
     """
     months = [f"{year}-{m:02d}" for m in range(1, 13)]
 
-    def month_axes(var, max_monthly):
+    def month_axes(var, max_monthly, count):
         return [
             {"name": var, "period": mp, "index": 0,
-             "count": COUNT, "min": 0, "max": max_monthly}
+             "count": count, "min": 0, "max": max_monthly}
             for mp in months
         ]
 
@@ -121,36 +129,37 @@ def build_axes(state, year):
     # employment_income is annual = monthly * 12 (person-level)
     earned_group.append({
         "name": "employment_income", "period": str(year), "index": 0,
-        "count": COUNT, "min": 0, "max": EARNED_MAX_MONTHLY * 12,
+        "count": EARNED_COUNT, "min": 0, "max": EARNED_MAX_MONTHLY * 12,
     })
     # generic monthly tanf gross earned, all 12 months
-    earned_group += month_axes("tanf_gross_earned_income", EARNED_MAX_MONTHLY)
+    earned_group += month_axes("tanf_gross_earned_income",
+                               EARNED_MAX_MONTHLY, EARNED_COUNT)
     # state-specific person-level earned
     if state in STATE_EARNED_PERSON_VARS:
         earned_group += month_axes(STATE_EARNED_PERSON_VARS[state],
-                                   EARNED_MAX_MONTHLY)
+                                   EARNED_MAX_MONTHLY, EARNED_COUNT)
 
     # ---- Unearned dimension (group 1), PERSON entity only ----
     unearned_group = []
     unearned_group += month_axes("tanf_gross_unearned_income",
-                                 UNEARNED_MAX_MONTHLY)
+                                 UNEARNED_MAX_MONTHLY, UNEARNED_COUNT)
     if state in STATE_UNEARNED_PERSON_VARS:
         unearned_group += month_axes(STATE_UNEARNED_PERSON_VARS[state],
-                                     UNEARNED_MAX_MONTHLY)
+                                     UNEARNED_MAX_MONTHLY, UNEARNED_COUNT)
 
     return [earned_group, unearned_group]
 
 
 # Flat-cell index layout (from PolicyEngine's meshgrid 'xy' expansion +
-# the .T applied below): for flat index k, earned_idx = k % COUNT (inner/fast),
-# unearned_idx = k // COUNT (outer/slow).
-_IDX = np.arange(COUNT * COUNT)
-EARNED_MONTHLY_BY_CELL = (_IDX % COUNT) * (EARNED_MAX_MONTHLY // (COUNT - 1))
-UNEARNED_MONTHLY_BY_CELL = (_IDX // COUNT) * (UNEARNED_MAX_MONTHLY // (COUNT - 1))
+# the .T applied below): for flat index k, earned_idx = k % EARNED_COUNT
+# (inner/fast), unearned_idx = k // EARNED_COUNT (outer/slow).
+_IDX = np.arange(EARNED_COUNT * UNEARNED_COUNT)
+EARNED_MONTHLY_BY_CELL = (_IDX % EARNED_COUNT) * EARNED_STEP
+UNEARNED_MONTHLY_BY_CELL = (_IDX // EARNED_COUNT) * UNEARNED_STEP
 
 
 def set_spm_year_inputs(sim, state, year):
-    """Set SPM-unit-level annual income vars across all 961 expanded cells,
+    """Set SPM-unit-level annual income vars across all expanded cells,
     matching exactly what create_situation sets per cell (annual = monthly*12).
     """
     if state in STATE_EARNED_SPM_VARS:
@@ -161,8 +170,8 @@ def set_spm_year_inputs(sim, state, year):
                       UNEARNED_MONTHLY_BY_CELL * 12)
 
 
-EARNED_STEPS = list(range(0, EARNED_MAX_MONTHLY + 1, EARNED_MAX_MONTHLY // (COUNT - 1)))
-UNEARNED_STEPS = list(range(0, UNEARNED_MAX_MONTHLY + 1, UNEARNED_MAX_MONTHLY // (COUNT - 1)))
+EARNED_STEPS = list(range(0, EARNED_MAX_MONTHLY + 1, EARNED_STEP))
+UNEARNED_STEPS = list(range(0, UNEARNED_MAX_MONTHLY + 1, UNEARNED_STEP))
 
 
 def _structure_per_cell(state_code, county, num_adults, num_children,
@@ -227,7 +236,10 @@ def compute_state(state_code, county, output_name, out_dir,
                 # then transpose to get the [earned][unearned] layout the
                 # frontend (and precompute.py) expect.
                 monthly = (
-                    np.round(annual / 12).astype(int).reshape(COUNT, COUNT).T
+                    np.round(annual / 12)
+                    .astype(int)
+                    .reshape(UNEARNED_COUNT, EARNED_COUNT)
+                    .T
                 )
                 data[key] = monthly.tolist()
             except Exception as e:

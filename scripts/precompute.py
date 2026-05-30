@@ -18,7 +18,9 @@ from config import PILOT_STATES, CA_COUNTIES, PA_COUNTIES, VA_COUNTIES, VT_COUNT
 
 # Grid configuration
 YEAR = 2026
-EARNED_STEPS = list(range(0, 3001, 100))  # $0-$3000/mo in $100 steps (31 values)
+# Asymmetric resolution: earned $25 (benefit kinks fall on $25 boundaries),
+# unearned $100 (~linear response). See scripts/README.md.
+EARNED_STEPS = list(range(0, 3001, 25))    # $0-$3000/mo in $25 steps (121 values)
 UNEARNED_STEPS = list(range(0, 3001, 100))  # $0-$3000/mo in $100 steps (31 values)
 ADULTS_RANGE = [1, 2]
 CHILDREN_RANGE = list(range(0, 8))  # 0-7

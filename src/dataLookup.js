@@ -109,7 +109,7 @@ export function getMaxBenefit(stateData, numAdults, numChildren, enrolled) {
  * Generate chart data: TANF benefit over an income range.
  * Sweeps total income from $0 to $maxIncome, maintaining the earned/unearned ratio.
  */
-export function generateChartData(stateData, numAdults, numChildren, enrolled, earnedMonthly, unearnedMonthly, maxIncome = 3000, step = 50) {
+export function generateChartData(stateData, numAdults, numChildren, enrolled, earnedMonthly, unearnedMonthly, maxIncome = 3000, step = 25) {
   const totalIncome = earnedMonthly + unearnedMonthly
   const earnedRatio = totalIncome > 0 ? earnedMonthly / totalIncome : 1.0
 

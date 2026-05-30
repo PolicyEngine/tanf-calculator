@@ -33,12 +33,14 @@ rent high enough to reach the shelter cap). These states are flagged
 
 | Dimension | Range | Step |
 |-----------|-------|------|
-| Earned income | $0–$3,000/mo | $100 |
+| Earned income | $0–$3,000/mo | $25 |
 | Unearned income | $0–$3,000/mo | $100 |
 | Adults | 1–2 | — |
 | Children | 0–7 | — |
 
-This produces 15,376 benefit values per state. The vectorized generator
+The earned axis uses a fine $25 step (the benefit's disregard/phase-out kinks
+fall on $25 boundaries) while unearned uses $100 (its response is ~linear) —
+`121 × 31 × 2 × 8 = 60,016` benefit values per state. The vectorized generator
 (`precompute_vec.py`) computes a full state in ~2–5 seconds — roughly **600×
 faster** than the cell-by-cell generator — and is validated bit-for-bit
 identical to it. See [scripts/README.md](scripts/README.md).

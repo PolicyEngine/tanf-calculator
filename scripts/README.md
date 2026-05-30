@@ -14,17 +14,22 @@ The frontend is fully static: every TANF benefit it shows is precomputed into
 
 ## The grid
 
-Each state file is a full grid of **15,376** benefit values:
+Each state file is a full grid of **60,016** benefit values:
 
 | Dimension | Values | Count |
 |---|---|---|
-| Earned income (monthly) | $0–$3,000, $100 steps | 31 |
+| Earned income (monthly) | $0–$3,000, **$25 steps** | 121 |
 | Unearned income (monthly) | $0–$3,000, $100 steps | 31 |
 | Adults | 1, 2 | 2 |
 | Children | 0–7 | 8 |
 
-`31 × 31 × 2 × 8 = 15,376`. Stored as `data["<adults>_<children>_false"][earned_idx][unearned_idx]`
+`121 × 31 × 2 × 8 = 60,016`. Stored as `data["<adults>_<children>_false"][earned_idx][unearned_idx]`
 = the rounded **monthly** benefit.
+
+The resolution is **asymmetric**: the benefit's earned-income kinks (disregards /
+phase-outs) fall on $25 boundaries, so the earned axis is sampled at $25; the
+response to unearned income is ~linear, so $100 there is exact. This keeps charts
+smooth at ~¼ the data of a symmetric $25 grid.
 
 ## Shelter allowance assumption
 
@@ -49,18 +54,18 @@ rest of the state (`VT_2`).
 
 ## Why the vectorized generator is ~600× faster
 
-The bottleneck was never the math — it was constructing **15,376 separate
+The bottleneck was never the math — it was constructing **60,016 separate
 `Simulation` objects per state**. `precompute_vec.py` constructs only **16**:
 
 * The **household-structure** dimensions (adults × children) *can't* be
   expressed as axes — they change the number of person entities — so they stay
   a 16-iteration loop (2 adults × 8 children).
-* The **income** dimensions (31 earned × 31 unearned = 961 cells) become two
-  PolicyEngine **axis groups**, so one `Simulation` computes all 961 cells in a
+* The **income** dimensions (121 earned × 31 unearned = 3,751 cells) become two
+  PolicyEngine **axis groups**, so one `Simulation` computes all 3,751 cells in a
   single vectorized pass.
 
-That's 16 builds per state instead of 15,376. Measured on Illinois: **4.3 s
-vectorized vs ~47.6 min cell-by-cell (~664×)**.
+That's 16 builds per state instead of 60,016. (Measured on the original 31×31
+grid: Illinois **4.3 s** vectorized vs **~47.6 min** cell-by-cell, ~664×.)
 
 ### How the axes are built (and why it matches exactly)
 
@@ -82,7 +87,7 @@ Two subtleties that the code documents inline:
    using the *first* axis's entity, so person-level and SPM-unit-level vars
    can't share a group. The **SPM-unit annual** vars (CA, CO, NC) are therefore
    set *after* the simulation is built, via `simulation.set_input`, with a
-   961-length array matching the cell layout.
+   3,751-length array matching the cell layout.
 2. **Cell orientation.** PolicyEngine expands axis group 0 (earned) as the
    *inner/fast* index (`np.meshgrid` uses `'xy'` indexing), so the flat result
    is laid out `[unearned][earned]`. The code reshapes then transposes (`.T`)
