@@ -8,7 +8,7 @@ import json
 import os
 import sys
 import time
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 
 # Add scripts dir to path (calculator.py and config.py live here)
 sys.path.insert(0, os.path.dirname(__file__))
@@ -17,7 +17,7 @@ from calculator import _calculate_tanf_amount
 from config import PILOT_STATES, CA_COUNTIES, PA_COUNTIES, VA_COUNTIES
 
 # Grid configuration
-YEAR = 2025
+YEAR = 2026
 EARNED_STEPS = list(range(0, 3001, 100))  # $0-$3000/mo in $100 steps (31 values)
 UNEARNED_STEPS = list(range(0, 3001, 100))  # $0-$3000/mo in $100 steps (31 values)
 ADULTS_RANGE = [1, 2]
@@ -43,7 +43,7 @@ VA_GROUP_COUNTIES = {
 }
 
 OUTPUT_DIR = os.path.join(
-    os.path.dirname(__file__), "..", "frontend", "public", "data"
+    os.path.dirname(__file__), "..", "public", "data"
 )
 
 
@@ -113,11 +113,11 @@ def build_metadata():
     pa_counties, pa_county_groups = build_county_list(PA_COUNTIES)
     va_counties, va_county_groups = build_county_list(VA_COUNTIES)
 
-    # Federal Poverty Guidelines 2025
+    # Federal Poverty Guidelines 2026
     fpg = {
-        "default": {"base": 15650, "per_additional": 5500},
-        "AK": {"base": 19560, "per_additional": 6880},
-        "HI": {"base": 18000, "per_additional": 6330},
+        "default": {"base": 15960, "per_additional": 5680},
+        "AK": {"base": 19950, "per_additional": 7100},
+        "HI": {"base": 18360, "per_additional": 6530},
     }
 
     from importlib.metadata import version as pkg_version
@@ -154,6 +154,7 @@ def build_metadata():
 
 
 def main():
+    sys.stdout.reconfigure(line_buffering=True)
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -165,6 +166,12 @@ def main():
         "--metadata-only",
         action="store_true",
         help="Only generate metadata.json",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=3,
+        help="Number of parallel worker processes (default: 3).",
     )
     args = parser.parse_args()
 
@@ -221,7 +228,7 @@ def main():
     start = time.time()
 
     # Use multiprocessing
-    num_workers = min(cpu_count(), len(tasks))
+    num_workers = min(args.workers, len(tasks))
     print(f"Using {num_workers} workers...\n")
 
     completed = 0
