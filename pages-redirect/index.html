@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TANF Calculator has moved</title>
+  <link rel="canonical" href="https://www.policyengine.org/us/tanf-calculator" />
+  <!-- Fallback redirect for clients without JS -->
+  <meta http-equiv="refresh" content="4; url=https://www.policyengine.org/us/tanf-calculator" />
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f7f9fc;
+      color: #0a0e17;
+      padding: 24px;
+    }
+    .card {
+      max-width: 520px;
+      width: 100%;
+      background: #fff;
+      border: 1px solid #e6eaf0;
+      border-radius: 16px;
+      padding: 40px 36px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(10, 14, 23, 0.06);
+    }
+    h1 { font-size: 1.5rem; margin: 0 0 12px; }
+    p { margin: 0 0 16px; line-height: 1.55; color: #3d4658; }
+    .btn {
+      display: inline-block;
+      margin: 8px 0 4px;
+      padding: 12px 22px;
+      background: #2c6496;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .btn:hover { background: #245182; }
+    .muted { font-size: 0.85rem; color: #6b7385; margin-top: 18px; }
+    a.plain { color: #2c6496; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>The TANF Calculator has moved</h1>
+    <p>This tool now lives on PolicyEngine. You'll be redirected automatically in a moment.</p>
+    <p><a class="btn" id="go" href="https://www.policyengine.org/us/tanf-calculator">Go to the new TANF Calculator →</a></p>
+    <p class="muted">If you're not redirected, visit<br />
+      <a class="plain" href="https://www.policyengine.org/us/tanf-calculator">www.policyengine.org/us/tanf-calculator</a>
+    </p>
+  </main>
+  <script>
+    // Belt-and-suspenders client-side redirect (replace() so Back doesn't loop here).
+    (function () {
+      var target = "https://www.policyengine.org/us/tanf-calculator";
+      setTimeout(function () { window.location.replace(target); }, 2500);
+    })();
+  </script>
+</body>
+</html>
