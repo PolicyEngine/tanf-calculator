@@ -6,7 +6,7 @@ A web application that estimates [Temporary Assistance for Needy Families (TANF)
 
 ## Features
 
-- **Benefit estimation** for any US state, with support for county-level variations (CA, PA, VA)
+- **Benefit estimation** for any US state, with support for county-level variations (CA, PA, VA, VT)
 - **Income & benefits chart** comparing income + TANF to the federal poverty level
 - **Interactive state map** with heatmap view of benefits across states
 - **State ranking** comparing benefit amounts across all states
@@ -22,7 +22,12 @@ The app is fully static — all TANF benefits are precomputed into JSON files, s
 | Data generation | Python, [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us) |
 | Hosting | Vercel (embedded in policyengine.org via multizone) |
 
-**Current data version:** policyengine-us `1.715.3` + [Indiana TANF fix #8543](https://github.com/PolicyEngine/policyengine-us/pull/8543), tax year 2026 — all 56 data files regenerated.
+**Current data version:** policyengine-us `1.715.3` + [Indiana TANF fix #8543](https://github.com/PolicyEngine/policyengine-us/pull/8543), tax year 2026 — all data files regenerated.
+
+For the four housing-sensitive states (AZ, NY, VT, FL), the precomputed benefit
+includes the **maximum potential shelter / housing allowance** (the model assumes
+rent high enough to reach the shelter cap). These states are flagged
+`shelter_sensitive` in `metadata.json`, and the UI notes the assumption.
 
 ### Precomputed data grid
 

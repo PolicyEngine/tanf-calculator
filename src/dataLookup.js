@@ -142,7 +142,7 @@ export async function calculateAllStates(numAdults, numChildren, enrolled, earne
   const results = []
 
   // Default groups for state comparison (use first/most common group)
-  const defaultGroups = { CA: 1, PA: 2, VA: 2 }
+  const defaultGroups = { CA: 1, PA: 2, VA: 2, VT: 2 }
 
   // Load all state data in parallel
   const loadPromises = meta.states.map(async (s) => {
@@ -220,6 +220,12 @@ export function buildResult(stateData, stateCode, stateName, numAdults, numChild
       is_tanf_enrolled: enrolled,
     },
   }
+
+  // Whether this state's benefit includes a rent-based shelter allowance
+  // (baked in at the maximum in the precomputed grids).
+  result.shelter_sensitive = !!metadata?.states?.find(
+    (s) => s.code === stateCode
+  )?.shelter_sensitive
 
   // Simplified breakdown (max benefit from precomputed data)
   if (maxBenefit > 0) {

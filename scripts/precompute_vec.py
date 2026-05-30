@@ -37,7 +37,7 @@ from calculator import (
     STATE_TANF_VARIABLES,
     _calculate_tanf_amount,
 )
-from config import PILOT_STATES, CA_COUNTIES, PA_COUNTIES, VA_COUNTIES
+from config import PILOT_STATES, CA_COUNTIES, PA_COUNTIES, VA_COUNTIES, VT_COUNTIES
 
 # --- Grid configuration (must match precompute.py) ---
 YEAR = 2026
@@ -46,6 +46,14 @@ EARNED_MAX_MONTHLY = 3000
 UNEARNED_MAX_MONTHLY = 3000
 ADULTS_RANGE = [1, 2]
 CHILDREN_RANGE = list(range(0, 8))
+
+# Shelter allowance assumption (see scripts/README.md). The calculator reports
+# the maximum potential monthly benefit, which for the housing-sensitive states
+# (AZ, NY, VT, FL) includes the full (capped) TANF shelter / housing allowance.
+# We assume a rent high enough to reach every state's shelter cap across all
+# family sizes; rent is not income-tested, so the other 47 jurisdictions are
+# unaffected. Pass --no-shelter (rent 0) to reproduce the old no-shelter data.
+ASSUMED_MONTHLY_RENT = 5000
 
 # Representative counties per region/group (must match precompute.py)
 CA_REGION_COUNTIES = {1: "LOS_ANGELES_COUNTY_CA", 2: "SACRAMENTO_COUNTY_CA"}
@@ -56,6 +64,7 @@ PA_GROUP_COUNTIES = {
     4: "ARMSTRONG_COUNTY_PA",
 }
 VA_GROUP_COUNTIES = {2: "ACCOMACK_COUNTY_VA", 3: "ARLINGTON_COUNTY_VA"}
+VT_GROUP_COUNTIES = {1: "CHITTENDEN_COUNTY_VT", 2: "WASHINGTON_COUNTY_VT"}
 
 # --- State-specific income vars (MIRRORS calculator.create_situation) ---
 # Split by entity because PolicyEngine axis groups must be entity-homogeneous
@@ -156,7 +165,8 @@ EARNED_STEPS = list(range(0, EARNED_MAX_MONTHLY + 1, EARNED_MAX_MONTHLY // (COUN
 UNEARNED_STEPS = list(range(0, UNEARNED_MAX_MONTHLY + 1, UNEARNED_MAX_MONTHLY // (COUNT - 1)))
 
 
-def _structure_per_cell(state_code, county, num_adults, num_children):
+def _structure_per_cell(state_code, county, num_adults, num_children,
+                        monthly_rent):
     """Fallback: compute one structure cell-by-cell (the trusted path)."""
     benefits = []
     for earned_m in EARNED_STEPS:
@@ -168,6 +178,7 @@ def _structure_per_cell(state_code, county, num_adults, num_children):
                     num_adults=num_adults, num_children=num_children,
                     earned_income=earned_m * 12, unearned_income=unearned_m * 12,
                     county=county, is_tanf_enrolled=False,
+                    monthly_rent=monthly_rent,
                 )
                 row.append(round(amount / 12))
             except Exception:
@@ -176,7 +187,8 @@ def _structure_per_cell(state_code, county, num_adults, num_children):
     return benefits
 
 
-def compute_state(state_code, county, output_name, out_dir):
+def compute_state(state_code, county, output_name, out_dir,
+                  assumed_monthly_rent=ASSUMED_MONTHLY_RENT):
     """Compute all 16 structures for one effective state, vectorized.
 
     Falls back to the trusted per-cell path for any single structure whose
@@ -194,12 +206,15 @@ def compute_state(state_code, county, output_name, out_dir):
             try:
                 # Base structure WITHOUT income (earned=unearned=0) — reuses the
                 # exact create_situation logic, then we bolt on the income axes.
+                # monthly_rent drives the shelter allowance (AZ/NY/VT/FL); it is
+                # a fixed input replicated across all axis-expanded cells.
                 base = create_situation(
                     state=state_code, year=YEAR,
                     num_adults=num_adults, num_children=num_children,
                     earned_income=0, unearned_income=0,
                     child_ages=None, county=county,
                     is_tanf_enrolled=False, resources=0,
+                    monthly_rent=assumed_monthly_rent,
                 )
                 base["axes"] = axes
 
@@ -219,7 +234,8 @@ def compute_state(state_code, county, output_name, out_dir):
                 print(f"    ! {output_name} {key}: vectorized failed "
                       f"({type(e).__name__}: {e}); falling back to per-cell")
                 data[key] = _structure_per_cell(
-                    state_code, county, num_adults, num_children
+                    state_code, county, num_adults, num_children,
+                    assumed_monthly_rent,
                 )
                 fallbacks += 1
 
@@ -243,6 +259,9 @@ def tasks_for_states(state_filter):
         elif state_code == "VA":
             for group, county in VA_GROUP_COUNTIES.items():
                 tasks.append((state_code, county, f"VA_{group}"))
+        elif state_code == "VT":
+            for group, county in VT_GROUP_COUNTIES.items():
+                tasks.append((state_code, county, f"VT_{group}"))
         else:
             tasks.append((state_code, None, state_code))
     return tasks
@@ -254,22 +273,29 @@ def main():
     parser.add_argument("--states", help="Comma-separated state codes")
     parser.add_argument("--output-dir", default=OUTPUT_DIR,
                         help="Where to write JSON (default: public/data)")
+    parser.add_argument("--no-shelter", action="store_true",
+                        help="Assume $0 rent (no shelter allowance) — reproduces "
+                             "the old no-shelter data.")
     args = parser.parse_args()
 
     state_filter = set(args.states.upper().split(",")) if args.states else None
     out_dir = args.output_dir
+    shelter_rent = 0 if args.no_shelter else ASSUMED_MONTHLY_RENT
     os.makedirs(out_dir, exist_ok=True)
 
     tasks = tasks_for_states(state_filter)
     from importlib.metadata import version as pkg_version
     print(f"policyengine-us version: {pkg_version('policyengine-us')}")
     print(f"Vectorized precompute: {len(tasks)} file(s) -> {out_dir}")
+    print(f"Shelter allowance: assumed rent ${shelter_rent}/mo"
+          + (" (DISABLED)" if shelter_rent == 0 else ""))
 
     start = time.time()
     total_fallbacks = 0
     for i, (state_code, county, output_name) in enumerate(tasks, 1):
         t0 = time.time()
-        _, fallbacks = compute_state(state_code, county, output_name, out_dir)
+        _, fallbacks = compute_state(state_code, county, output_name, out_dir,
+                                     assumed_monthly_rent=shelter_rent)
         total_fallbacks += fallbacks
         dt = time.time() - t0
         fb = f"  [{fallbacks} per-cell fallback structure(s)]" if fallbacks else ""

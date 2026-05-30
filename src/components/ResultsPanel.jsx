@@ -77,6 +77,24 @@ function ResultsPanel({ result, chartData, householdSizeData, comparisonData, lo
           <h3>Estimated Monthly TANF Benefit</h3>
           <div className="amount">{formatCurrency(result.tanf_monthly)}</div>
           <div className="amount-annual">{formatCurrency(result.tanf_annual)}/yr</div>
+          {result.shelter_sensitive && (
+            <div
+              className="shelter-note"
+              title="This estimate assumes the household pays enough rent to receive the maximum TANF shelter / housing allowance for its size. A household with little or no housing cost would receive less."
+              style={{
+                marginTop: '8px',
+                fontSize: '0.8rem',
+                opacity: 0.85,
+                cursor: 'help',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span aria-hidden="true">ⓘ</span>
+              Includes maximum potential shelter allowance
+            </div>
+          )}
         </div>
         <div className="result-banner-details">
           <span className={`eligibility-status ${result.eligible ? 'eligible' : 'not-eligible'}`}>

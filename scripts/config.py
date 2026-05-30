@@ -60,7 +60,7 @@ PILOT_STATES = {
 STATES_WITH_TANF = set(PILOT_STATES.keys())
 
 # States that require county selection (affects benefit calculation)
-STATES_REQUIRING_COUNTY = {"CA", "PA", "VA"}
+STATES_REQUIRING_COUNTY = {"CA", "PA", "VA", "VT"}
 
 # California counties - format: (enum_name, display_name, region)
 # Region 1 = higher cost counties, Region 2 = other counties
@@ -326,6 +326,27 @@ VA_COUNTIES = [
     ("WISE_COUNTY_VA", "Wise", 2),
     ("WYTHE_COUNTY_VA", "Wythe", 2),
     ("YORK_COUNTY_VA", "York", 3),
+]
+
+# Vermont counties - format: (enum_name, display_name, group)
+# Group 1 = Chittenden (higher Reach Up housing allowance), Group 2 = rest of state.
+# Only Chittenden county has a distinct (higher) housing allowance cap; all other
+# counties share the non-Chittenden cap (vt_reach_up_housing_allowance).
+VT_COUNTIES = [
+    ("ADDISON_COUNTY_VT", "Addison", 2),
+    ("BENNINGTON_COUNTY_VT", "Bennington", 2),
+    ("CALEDONIA_COUNTY_VT", "Caledonia", 2),
+    ("CHITTENDEN_COUNTY_VT", "Chittenden", 1),
+    ("ESSEX_COUNTY_VT", "Essex", 2),
+    ("FRANKLIN_COUNTY_VT", "Franklin", 2),
+    ("GRAND_ISLE_COUNTY_VT", "Grand Isle", 2),
+    ("LAMOILLE_COUNTY_VT", "Lamoille", 2),
+    ("ORANGE_COUNTY_VT", "Orange", 2),
+    ("ORLEANS_COUNTY_VT", "Orleans", 2),
+    ("RUTLAND_COUNTY_VT", "Rutland", 2),
+    ("WASHINGTON_COUNTY_VT", "Washington", 2),
+    ("WINDHAM_COUNTY_VT", "Windham", 2),
+    ("WINDSOR_COUNTY_VT", "Windsor", 2),
 ]
 
 # Default year for calculations

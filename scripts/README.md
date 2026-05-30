@@ -26,6 +26,27 @@ Each state file is a full grid of **15,376** benefit values:
 `31 × 31 × 2 × 8 = 15,376`. Stored as `data["<adults>_<children>_false"][earned_idx][unearned_idx]`
 = the rounded **monthly** benefit.
 
+## Shelter allowance assumption
+
+Four states (**AZ, NY, VT, FL**) add a rent-based shelter / housing allowance to
+the TANF benefit. The grids report the **maximum potential** benefit, so both
+generators set `ASSUMED_MONTHLY_RENT = 5000` (via `create_situation`'s
+`monthly_rent` param) — a rent high enough to reach every state's shelter cap
+across all family sizes (verified: identical at $5,000 and $10,000/mo). Rent is
+not income-tested, so the other 47 jurisdictions are byte-identical with or
+without it. Pass `--no-shelter` to reproduce the old $0-rent data.
+
+These four states are flagged `shelter_sensitive` in `metadata.json` so the UI
+can show a "includes maximum potential shelter allowance" note.
+
+## County-gated states
+
+`CA`, `PA`, `VA`, and `VT` vary by county, so each emits one file per county
+group (`CA_1`, `PA_1`…`PA_4`, `VA_2`/`VA_3`, `VT_1`/`VT_2`). Representative
+counties per group live in `*_GROUP_COUNTIES`; `metadata.json` maps every county
+to its group. **VT** splits into Chittenden (`VT_1`, higher housing cap) vs. the
+rest of the state (`VT_2`).
+
 ## Why the vectorized generator is ~600× faster
 
 The bottleneck was never the math — it was constructing **15,376 separate

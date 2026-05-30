@@ -14,7 +14,7 @@ from multiprocessing import Pool
 sys.path.insert(0, os.path.dirname(__file__))
 
 from calculator import _calculate_tanf_amount
-from config import PILOT_STATES, CA_COUNTIES, PA_COUNTIES, VA_COUNTIES
+from config import PILOT_STATES, CA_COUNTIES, PA_COUNTIES, VA_COUNTIES, VT_COUNTIES
 
 # Grid configuration
 YEAR = 2026
@@ -23,6 +23,13 @@ UNEARNED_STEPS = list(range(0, 3001, 100))  # $0-$3000/mo in $100 steps (31 valu
 ADULTS_RANGE = [1, 2]
 CHILDREN_RANGE = list(range(0, 8))  # 0-7
 ENROLLED_VALUES = [False]
+
+# Shelter allowance assumption (mirrors precompute_vec.py). The calculator
+# reports the maximum potential monthly benefit, which for the housing-sensitive
+# states (AZ, NY, VT, FL) includes the full (capped) TANF shelter / housing
+# allowance. We assume a rent high enough to reach every state's shelter cap;
+# rent is not income-tested, so the other 47 jurisdictions are unaffected.
+ASSUMED_MONTHLY_RENT = 5000
 
 # Representative counties per region/group for precomputation
 CA_REGION_COUNTIES = {
@@ -40,6 +47,11 @@ PA_GROUP_COUNTIES = {
 VA_GROUP_COUNTIES = {
     2: "ACCOMACK_COUNTY_VA",
     3: "ARLINGTON_COUNTY_VA",
+}
+
+VT_GROUP_COUNTIES = {
+    1: "CHITTENDEN_COUNTY_VT",
+    2: "WASHINGTON_COUNTY_VT",
 }
 
 OUTPUT_DIR = os.path.join(
@@ -76,6 +88,7 @@ def compute_state(args):
                                 unearned_income=unearned_annual,
                                 county=county,
                                 is_tanf_enrolled=enrolled,
+                                monthly_rent=ASSUMED_MONTHLY_RENT,
                             )
                             row.append(round(amount / 12))
                         except Exception as e:
@@ -112,6 +125,7 @@ def build_metadata():
     ca_counties, ca_county_groups = build_county_list(CA_COUNTIES)
     pa_counties, pa_county_groups = build_county_list(PA_COUNTIES)
     va_counties, va_county_groups = build_county_list(VA_COUNTIES)
+    vt_counties, vt_county_groups = build_county_list(VT_COUNTIES)
 
     # Federal Poverty Guidelines 2026
     fpg = {
@@ -134,7 +148,11 @@ def build_metadata():
             {
                 "code": code,
                 "name": name,
-                "requires_county": code in ("CA", "PA", "VA"),
+                "requires_county": code in ("CA", "PA", "VA", "VT"),
+                # States whose TANF benefit includes a rent-based shelter /
+                # housing allowance. The precomputed grids assume rent high
+                # enough to max that allowance, so the UI should note it.
+                "shelter_sensitive": code in ("AZ", "NY", "VT", "FL"),
             }
             for code, name in sorted(PILOT_STATES.items())
         ],
@@ -142,6 +160,7 @@ def build_metadata():
             "CA": {"counties": ca_counties, "county_groups": ca_county_groups},
             "PA": {"counties": pa_counties, "county_groups": pa_county_groups},
             "VA": {"counties": va_counties, "county_groups": va_county_groups},
+            "VT": {"counties": vt_counties, "county_groups": vt_county_groups},
         },
         "fpg": fpg,
     }
@@ -202,6 +221,9 @@ def main():
         elif state_code == "VA":
             for group, county in VA_GROUP_COUNTIES.items():
                 tasks.append((state_code, county, f"VA_{group}"))
+        elif state_code == "VT":
+            for group, county in VT_GROUP_COUNTIES.items():
+                tasks.append((state_code, county, f"VT_{group}"))
         else:
             tasks.append((state_code, None, state_code))
 

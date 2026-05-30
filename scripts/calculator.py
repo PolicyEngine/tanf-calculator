@@ -90,6 +90,7 @@ def create_situation(
     county: str | None = None,
     is_tanf_enrolled: bool = False,
     resources: float = 0,
+    monthly_rent: float = 0,
 ) -> dict:
     """
     Create a PolicyEngine situation dictionary for TANF calculation.
@@ -255,6 +256,16 @@ def create_situation(
     # Set TANF enrollment status at SPM unit level
     if is_tanf_enrolled:
         situation["spm_units"]["spm_unit"]["is_tanf_enrolled"] = {year: True}
+
+    # Assumed shelter cost. Drives the TANF shelter / housing allowance for the
+    # housing-sensitive states (AZ, NY, VT, FL). pre_subsidy_rent is summed over
+    # the SPM unit by the model, so setting it on the first adult represents the
+    # whole household's rent. Rent is not income-tested, so this has no effect on
+    # the other 47 jurisdictions.
+    if monthly_rent > 0:
+        situation["people"]["adult_1"]["pre_subsidy_rent"] = {
+            year: monthly_rent * 12
+        }
 
     return situation
 
@@ -426,6 +437,7 @@ def _calculate_tanf_amount(
     county: str | None = None,
     is_tanf_enrolled: bool = False,
     resources: float = 0,
+    monthly_rent: float = 0,
 ) -> tuple[float, bool]:
     """
     Lightweight TANF calculation — returns only (annual_amount, eligible).
@@ -438,6 +450,7 @@ def _calculate_tanf_amount(
         earned_income=earned_income, unearned_income=unearned_income,
         child_ages=child_ages, county=county,
         is_tanf_enrolled=is_tanf_enrolled, resources=resources,
+        monthly_rent=monthly_rent,
     )
     simulation = Simulation(situation=situation)
     tanf_variable = STATE_TANF_VARIABLES.get(state, "tanf")
