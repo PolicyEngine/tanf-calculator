@@ -2,7 +2,7 @@
 
 A web application that estimates [Temporary Assistance for Needy Families (TANF)](https://www.acf.hhs.gov/ofa/programs/tanf) benefit eligibility and amounts for households across all 50 US states and DC. Powered by [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us).
 
-**Live app:** [policyengine.github.io/tanf-calculator](https://policyengine.github.io/tanf-calculator/)
+**Live app:** [policyengine.org/us/tanf-calculator](https://policyengine.org/us/tanf-calculator)
 
 ## Features
 
@@ -18,9 +18,9 @@ The app is fully static — all TANF benefits are precomputed into JSON files, s
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Vite 5, Recharts, react-simple-maps |
+| Frontend | Next.js 16 (App Router), React 19, Recharts, react-simple-maps |
 | Data generation | Python, [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us) |
-| Hosting | GitHub Pages (via `docs/` folder) |
+| Hosting | Vercel (embedded in policyengine.org via multizone) |
 
 **Current data version:** policyengine-us `1.715.3` + [Indiana TANF fix #8543](https://github.com/PolicyEngine/policyengine-us/pull/8543), tax year 2026 — all 56 data files regenerated.
 
@@ -42,17 +42,16 @@ identical to it. See [scripts/README.md](scripts/README.md).
 
 ### Prerequisites
 
-- Node.js 18+
+- [Bun](https://bun.sh)
 
 ### Run locally
 
 ```bash
-cd frontend
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
-The dev server starts at `http://localhost:3000/tanf-calculator/`.
+The dev server starts at `http://localhost:3000/us/tanf-calculator`.
 
 ### Regenerate data
 
@@ -76,14 +75,13 @@ data; `precompute_vec.py` is just far faster. See
 [scripts/README.md](scripts/README.md) for how the vectorization works and the
 validation behind that claim.
 
-Then rebuild the frontend:
+Then rebuild the app:
 
 ```bash
-cd frontend
-npm run build
+bun run build
 ```
 
-The built files go to `docs/` for GitHub Pages deployment.
+Deployment is handled by Vercel automatically on push to `main`.
 
 ## License
 
