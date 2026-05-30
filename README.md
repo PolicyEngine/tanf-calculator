@@ -22,7 +22,7 @@ The app is fully static — all TANF benefits are precomputed into JSON files, s
 | Data generation | Python, [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us) |
 | Hosting | GitHub Pages (via `docs/` folder) |
 
-**Current data version:** policyengine-us `1.715.3` + [Indiana TANF fix #8543](https://github.com/PolicyEngine/policyengine-us/pull/8543), tax year 2026 — ⚠️ **partial regeneration** (23 of 56 data files updated; remaining 33 still on `1.598.0`, pending follow-up)
+**Current data version:** policyengine-us `1.715.3` + [Indiana TANF fix #8543](https://github.com/PolicyEngine/policyengine-us/pull/8543), tax year 2026 — all 56 data files regenerated.
 
 ### Precomputed data grid
 
@@ -33,7 +33,10 @@ The app is fully static — all TANF benefits are precomputed into JSON files, s
 | Adults | 1–2 | — |
 | Children | 0–7 | — |
 
-This produces 15,376 simulations per state (~23 minutes each).
+This produces 15,376 benefit values per state. The vectorized generator
+(`precompute_vec.py`) computes a full state in ~2–5 seconds — roughly **600×
+faster** than the cell-by-cell generator — and is validated bit-for-bit
+identical to it. See [scripts/README.md](scripts/README.md).
 
 ## Getting Started
 
@@ -58,10 +61,20 @@ Requires Python 3.10+ and policyengine-us:
 ```bash
 cd scripts
 pip install -r requirements.txt
-python precompute.py           # Generate all state JSON files
-python precompute.py --states CA,NY  # Generate specific states only
-python precompute.py --metadata-only # Regenerate metadata.json only
+
+# Fast vectorized generator (recommended; ~2–5s per state)
+python precompute_vec.py                 # Generate all state JSON files
+python precompute_vec.py --states CA,NY   # Generate specific states only
+
+# Reference cell-by-cell generator (slow; metadata.json lives here)
+python precompute.py --states CA,NY       # Generate specific states (slow)
+python precompute.py --metadata-only      # Regenerate metadata.json only
 ```
+
+The two generators are interchangeable and produce byte-for-byte identical
+data; `precompute_vec.py` is just far faster. See
+[scripts/README.md](scripts/README.md) for how the vectorization works and the
+validation behind that claim.
 
 Then rebuild the frontend:
 
