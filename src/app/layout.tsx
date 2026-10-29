@@ -5,7 +5,9 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
 
-const SITE_URL = 'https://tanf-calculator.vercel.app';
+// The canonical address: policyengine.org serves this app through a zone
+// rewrite, so links and link previews name it, not the Vercel deployment.
+const SITE_URL = 'https://policyengine.org/us/tanf-calculator';
 const TITLE =
   'TANF Calculator | Estimate Your TANF Benefits by State - PolicyEngine';
 const DESCRIPTION =
